@@ -71,9 +71,12 @@ public class DispatchServlet extends HttpServlet {
 
         if(invoke!=null){
             try {
-                Object invoke1 = invoke.getMethod().invoke(invoke.getObj());
+
+                //为方法的参数列表注入参数
+                Object invoke1 = invoke.getMethod().invoke(invoke.getObj(),getParamer(invoke.getMethod(),req));
 
                 System.out.println(invoke+"   这是执行的数据");
+
 
 
                 //看你是返回json还是页面
@@ -84,6 +87,51 @@ public class DispatchServlet extends HttpServlet {
             }
         }
     }
+
+    private Object[] getParamer(Method method, HttpServletRequest req) throws IllegalAccessException, InstantiationException, IOException {
+
+        Object[] param=new Object[method.getParameters().length];
+
+        Parameter[] parameters = method.getParameters();
+        for(int i=0;i<parameters.length;i++){
+            param[i]=_getParam(parameters[i],req);
+        }
+        return param;
+    }
+
+    //通过传递过来的参数获得
+    private Object _getParam(Parameter parameter, HttpServletRequest req) throws InstantiationException, IllegalAccessException, IOException {
+
+        if(parameter.isAnnotationPresent(RequestBody.class)){
+            return inflateJsonParam(parameter.getType(),req);
+        }
+
+        System.out.println("解析表单传过来的数据");
+
+        return inflateFormParam(parameter.getType(),req);
+    }
+
+    private Object inflateJsonParam(Class<?> type, HttpServletRequest req) throws IOException {
+        return new ObjectMapper().readValue(req.getQueryString().replaceAll("%20","\\"),type);
+    }
+
+    private Object inflateFormParam(Class<?> type, HttpServletRequest req) throws IllegalAccessException, InstantiationException {
+        Object o = type.newInstance();
+
+        System.out.println();
+
+        for(Field f:o.getClass().getDeclaredFields()){
+
+            System.out.println("req中的数据"+f.getName()+"   "+req.getAttribute(f.getName()));
+            System.out.println(req);
+
+            f.setAccessible(true);
+            //我记得请求参数是放到这个map中的
+            f.set(o, req.getParameterMap().get(f.getName())[0]);
+        }
+        return o;
+    }
+
 
     private void handleNext(Object result, Method method, HttpServletRequest req, HttpServletResponse resp) throws Exception {
         if(method.isAnnotationPresent(ResponceBody.class)){
