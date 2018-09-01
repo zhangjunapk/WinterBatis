@@ -89,6 +89,18 @@ public class DispatchServlet extends HttpServlet {
                 System.out.println("参数   :"+getParamer(invoke.getMethod(),req));
                 Object invoke1 = invoke.getMethod().invoke(invoke.getObj(),getParamer(invoke.getMethod(),req));
 
+                System.out.println(invoke.getMethod().getName()+">>>> 方法名");
+
+                for(Object s:getParamer(invoke.getMethod(),req)){
+                    String ss= String.valueOf(s);
+                    System.out.println("这是从req中获取的数据:......>>>"+ss);
+                }
+
+
+                System.out.println(" 这是从req中获取的数据   >>>"+getParamer(invoke.getMethod(),req));
+
+                //Object invoke1 = invoke.getMethod().invoke(invoke.getObj(),new Object[]{new String("哈哈")});
+
                 System.out.println(invoke+"   这是执行的数据");
 
                 //看你是返回json还是页面
@@ -148,10 +160,6 @@ public class DispatchServlet extends HttpServlet {
             param[i]=_getParam(parameters[i],req);
         }
 
-        for(Object o:param){
-            System.out.println(o.toString()+"     参fghjdfghj数列表--"+o+"--");
-        }
-
         System.out.println(Arrays.toString(param));
         System.out.println("----------------");
         return param;
@@ -172,9 +180,20 @@ public class DispatchServlet extends HttpServlet {
 
             System.out.println("请求中的数据          >"+req.getParameterMap().get(annotation.value()));
 
-           return req.getParameterMap().get(annotation.value());
-        }
+            System.out.println("请求中的数据   "+  req.getParameterMap().get(annotation.value()));
 
+            System.out.println("key :"+annotation.value()+"  values:"+req.getParameterMap().get(annotation.value()));
+
+//           return req.getParameterMap().get(annotation.value());
+
+           for(Map.Entry<String,String[]> entry:req.getParameterMap().entrySet()){
+               if(entry.getKey().equals(annotation.value())){
+                   return entry.getValue()[0];
+               }
+           }
+
+        }
+        //如果没有加注解，直接获得方法的参数类型，然后通过反射对里面的字段进行注入
         return inflateFormParam(parameter.getType(),req);
     }
 
@@ -362,7 +381,6 @@ public class DispatchServlet extends HttpServlet {
     }
 
     private void writeJson(Object result, HttpServletResponse resp) throws IOException {
-
         if(result==null){
             return;
         }
