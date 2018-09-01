@@ -8,6 +8,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.util.ValUtil;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
+import java.time.temporal.ValueRange;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -174,24 +176,59 @@ public class DispatchServlet extends HttpServlet {
 
         System.out.println("解析表单传过来的数据");
 
+        RequestParam annotation = parameter.getAnnotation(RequestParam.class);
+
+        System.out.println("请求中的数据          >"+req.getParameterMap().get(annotation.value()));
+
+        System.out.println("请求中的数据   "+  req.getParameterMap().get(annotation.value()));
+
+        System.out.println("key :"+annotation.value()+"  values:"+req.getParameterMap().get(annotation.value()));
+
+
+        Object[] valueArr=null;
+        for(Map.Entry<String,String[]> entry:req.getParameterMap().entrySet()){
+            if(entry.getKey().equals(annotation.value())){
+                valueArr= entry.getValue();
+            }
+        }
+        System.out.println("这是req中获取的数据  "+Arrays.toString(valueArr));
         //如果这个参数上加了requestparam
         if(parameter.isAnnotationPresent(RequestParam.class)){
-            RequestParam annotation = parameter.getAnnotation(RequestParam.class);
 
-            System.out.println("请求中的数据          >"+req.getParameterMap().get(annotation.value()));
+            System.out.println("加了requestparam注解");
 
-            System.out.println("请求中的数据   "+  req.getParameterMap().get(annotation.value()));
+            //判断参数类型,然后从req获得参数并做类型转换
+            //如果当前参数的类型数组的话就转换每个元素
+            if(parameter.getType().isArray()){
+                if(parameter.getType()==String[].class){
+                    //如果是字符串数组直接返回就行了哦
+                    return valueArr;
+                }
+                if(parameter.getType()==Float[].class||parameter.getType()==float[].class){
+                    return ValUtil.convertToFloatArr(valueArr);
+                }
+                if(parameter.getType()==Double[].class||parameter.getType()==double[].class){
+                    return ValUtil.convertToDoubleArr(valueArr);
+                }
 
-            System.out.println("key :"+annotation.value()+"  values:"+req.getParameterMap().get(annotation.value()));
+                if(parameter.getType()==Integer[].class||parameter.getType()==int[].class){
+                   return ValUtil.convertToIntegerArr(valueArr);
+                }
+
+                return valueArr;
+            }
+            if(parameter.getType()==Integer.class||parameter.getType()==int.class){
+                return Integer.parseInt((String) valueArr[0]);
+            }
+            if(parameter.getType()==Float.class||parameter.getType()==float.class){
+                return Float.parseFloat((String) valueArr[0]);
+            }
+            if(parameter.getType()==Double.class||parameter.getType()==double.class){
+                return Double.parseDouble((String) valueArr[0]);
+            }
 
 //           return req.getParameterMap().get(annotation.value());
-
-           for(Map.Entry<String,String[]> entry:req.getParameterMap().entrySet()){
-               if(entry.getKey().equals(annotation.value())){
-                   return entry.getValue()[0];
-               }
-           }
-
+            return null;
         }
         //如果没有加注解，直接获得方法的参数类型，然后通过反射对里面的字段进行注入
         return inflateFormParam(parameter.getType(),req);
