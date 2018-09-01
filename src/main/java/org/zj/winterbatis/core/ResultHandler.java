@@ -21,6 +21,13 @@ public class ResultHandler {
      */
     public static Object handleResult(Method method, String sql, DataSource dataSource) throws SQLException {
 
+
+        System.out.println("这是sql语句:         >  "+sql);
+
+        if(sql==null||sql.equals("")){
+            return null;
+        }
+
         Connection connection = dataSource.getConnection();
 
         Statement statement = connection.createStatement();

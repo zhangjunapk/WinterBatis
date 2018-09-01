@@ -9,8 +9,7 @@ import java.lang.annotation.Target;
  * Created by ZhangJun on 2018/7/8.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Page {
-    int page();
-    int rows();
+@Target(ElementType.PARAMETER)
+public @interface Param {
+    String value();
 }

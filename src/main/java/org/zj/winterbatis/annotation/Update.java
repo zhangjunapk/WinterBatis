@@ -10,7 +10,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Page {
-    int page();
-    int rows();
+public @interface Update {
+    String value();
 }

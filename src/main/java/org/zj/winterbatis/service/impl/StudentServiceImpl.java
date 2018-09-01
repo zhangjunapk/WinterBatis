@@ -28,9 +28,10 @@ public class StudentServiceImpl {
         return studentMapper.findAll();
     }
 
-    @Page(page ="1",pageNum = "5",result = "all")
-    public PageInfo<Student> f(){
+    @Page(page =1,rows = 5)
+    public Object f(){
+        System.out.println("service 进来了");
         List<Student> all = studentMapper.findAll();
-        return null;
+        return all;
     }
 }

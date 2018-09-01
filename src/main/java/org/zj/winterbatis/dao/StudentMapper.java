@@ -26,4 +26,7 @@ public interface StudentMapper {
 
     @Update("update student set username=${username}")
     boolean update(Student s);
+
+    @Select("select * from student where username=${name}")
+    List<Student> select(@Param("name") String name);
 }

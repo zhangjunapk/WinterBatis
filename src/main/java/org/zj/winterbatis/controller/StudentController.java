@@ -1,9 +1,14 @@
 package org.zj.winterbatis.controller;
 
+import com.github.pagehelper.PageInfo;
 import org.zj.winterbatis.annotation.*;
 import org.zj.winterbatis.bean.Student;
+import org.zj.winterbatis.dao.StudentMapper;
 import org.zj.winterbatis.service.impl.StudentServiceImpl;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -15,19 +20,25 @@ import java.util.List;
 public class StudentController {
 
     @Autofired
+    StudentMapper studentMapper;
+
+    @Autofired
+    HttpServletRequest request;
+
+
+    @Autofired
+    HttpServletResponse response;
+
+
+    @Autofired
     StudentServiceImpl studentService;
-    @RequestMapping("/all")
-    public void jj(){
-         studentService.findAll();
-        /*for(Student s:all){
-            System.out.println(s);
-        }*//*
-        可以吧mapper注入到controller
-                但是不能将mapper注入到service*/
-    }
+
 
     @RequestMapping("/view")
     public String d(){
+
+        request.setAttribute("studentList",studentService.findAll());
+
         return "c";
     }
 
@@ -49,4 +60,45 @@ public class StudentController {
     public void sss(Student s){
         System.out.println(s);
     }
+
+    @RequestMapping("/diReq")
+    @ResponceBody
+    public void sss() throws IOException {
+        System.out.println(request.getRequestURI()+" 这是controller");
+        response.getWriter().write(" from controller");
+    }
+
+    @ResponceBody
+    @RequestMapping("/search")
+    public List<Student> jj(Student s){
+        return studentMapper.findCondition(s);
+    }
+
+    @RequestMapping("/insert")//其实成功了，
+    @ResponceBody
+    public void insert(Student s) throws IOException {
+        studentMapper.insert(s);
+
+        response.getWriter().write("其实写入成功了");
+
+    }
+
+    @RequestMapping("/update")//其实成功了
+    @ResponceBody
+    public void update(Student s){
+        studentMapper.update(s);
+    }
+
+    @RequestMapping("/delete")//其实成功了
+    @ResponceBody
+    public void delete(Student s){
+        studentMapper.delete(s);
+    }
+
+    @RequestMapping("/jj")
+     @ResponceBody
+    public Object jj(){
+        return studentService.f();
+    }
+
 }

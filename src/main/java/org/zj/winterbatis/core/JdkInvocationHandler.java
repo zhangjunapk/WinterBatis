@@ -1,5 +1,7 @@
 package org.zj.winterbatis.core;
 
+import org.zj.winterbatis.annotation.Page;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -27,7 +29,6 @@ public class JdkInvocationHandler implements InvocationHandler {
                 invoke.getMethod().invoke(invoke.getObj(), args);
             }
         }
-
         Object invoke1 = method.invoke(needProxy, args);
 
         if(aspectBean!=null) {
