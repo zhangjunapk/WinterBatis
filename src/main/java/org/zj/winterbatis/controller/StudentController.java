@@ -35,42 +35,42 @@ public class StudentController {
 
 
     @RequestMapping("/view")
-    public String d(){
+    public String d() {
 
-        request.setAttribute("studentList",studentService.findAll());
+        request.setAttribute("studentList", studentService.findAll());
 
         return "c";
     }
 
     @ResponceBody
     @RequestMapping("/json")
-    public List<Student> s(){
+    public List<Student> s() {
         System.out.println("我走了");
         return studentService.findAll();
     }
 
     @ResponceBody
     @RequestMapping("/param")
-    public void ss(@RequestBody Student s){
+    public void ss(@RequestBody Student s) {
         System.out.println(s);
     }
 
     @ResponceBody
     @RequestMapping("/paramForm")
-    public void sss(Student s){
+    public void sss(Student s) {
         System.out.println(s);
     }
 
     @RequestMapping("/diReq")
     @ResponceBody
     public void sss() throws IOException {
-        System.out.println(request.getRequestURI()+" 这是controller");
+        System.out.println(request.getRequestURI() + " 这是controller");
         response.getWriter().write(" from controller");
     }
 
     @ResponceBody
     @RequestMapping("/search")
-    public List<Student> jj(Student s){
+    public List<Student> jj(Student s) {
         return studentMapper.findCondition(s);
     }
 
@@ -85,19 +85,19 @@ public class StudentController {
 
     @RequestMapping("/update")//其实成功了
     @ResponceBody
-    public void update(Student s){
+    public void update(Student s) {
         studentMapper.update(s);
     }
 
     @RequestMapping("/delete")//其实成功了
     @ResponceBody
-    public void delete(Student s){
+    public void delete(Student s) {
         studentMapper.delete(s);
     }
 
     @RequestMapping("/jj")
-     @ResponceBody
-    public Object jj(){
+    @ResponceBody
+    public Object jj() {
         return studentService.f();
     }
 

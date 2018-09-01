@@ -8,10 +8,23 @@ import java.lang.reflect.Method;
 public class Invoke {
     Object obj;
     Method method;
-
+    String requestMethod;
     public Invoke() {
     }
 
+    public Invoke(Object obj, Method method, String requestMethod) {
+        this.obj = obj;
+        this.method = method;
+        this.requestMethod = requestMethod;
+    }
+
+    public String getRequestMethod() {
+        return requestMethod;
+    }
+
+    public void setRequestMethod(String requestMethod) {
+        this.requestMethod = requestMethod;
+    }
 
     public Object getObj() {
         return obj;

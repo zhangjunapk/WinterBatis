@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Service
 //如果实现了接口，注入不进去 提示不能注入
-public class StudentServiceImpl {
+public class StudentServiceImpl{
 
     //往这里面注入mapper有问题
     @Autofired
