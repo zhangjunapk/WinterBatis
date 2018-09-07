@@ -8,6 +8,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.annotation.BaseMapper;
 import org.zj.winterbatis.util.ValUtil;
 
 import javax.servlet.ServletConfig;
@@ -20,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
-import java.time.temporal.ValueRange;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -464,13 +464,12 @@ public class DispatchServlet extends HttpServlet {
 
         //先对切面进行初始化
         for (Class c : classes) {
-            if (c.isAnnotationPresent(Aspect.class)) {
-
+            if (c.isAnnotationPresent(Aspect.class)&&c.isAnnotationPresent(Condition.class)) {
                 List<Invoke> before = new ArrayList<>();
                 List<Invoke> after = new ArrayList<>();
 
                 instanceMap.put(c.getName(), c.newInstance());
-                Condition condition = (Condition) c.getAnnotation(Condition.class);
+                Condition example = (Condition) c.getAnnotation(Condition.class);
                 for (Method m : c.getDeclaredMethods()) {
                     if (m.isAnnotationPresent(Before.class)) {
                         before.add(new Invoke(instanceMap.get(c.getName()), m));
@@ -481,7 +480,7 @@ public class DispatchServlet extends HttpServlet {
                 }
                 //添加到aspect容器里
 
-                aspectBeanMap.put(condition.value(), new AspectBean(before, after));
+                aspectBeanMap.put(example.value(), new AspectBean(before, after));
             }
         }
     }
@@ -525,6 +524,12 @@ public class DispatchServlet extends HttpServlet {
     }
 
     private void doDI() {
+
+        System.out.println("----------------");
+        for(String s:instanceMap.keySet()){
+            System.out.println(s);
+        }
+        System.out.println("-----------------");
         for (Class c : classes) {
 
             System.out.println("       当前是" + c.getName());
@@ -539,6 +544,10 @@ public class DispatchServlet extends HttpServlet {
                         System.out.println(instanceMap.get(c.getName()) != null);
                         System.out.println(instanceMap.get(field.getType().getName()) != null);
                         System.out.println("----------");
+
+                        if(instanceMap.get(field.getType().getName())==null)
+                            continue;
+
                         field.set(instanceMap.get(c.getName()), instanceMap.get(field.getType().getName()));
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
@@ -554,9 +563,14 @@ public class DispatchServlet extends HttpServlet {
         for (Class c : classes) {
             if (c.isAnnotationPresent(Controller.class)||c.isAnnotationPresent(RestController.class)) {
 
-                RequestMapping requestMapping = (RequestMapping) c.getAnnotation(RequestMapping.class);
-                String prefixMapping = requestMapping.value();
+                System.out.println(c.getName());
 
+                RequestMapping requestMapping = (RequestMapping) c.getAnnotation(RequestMapping.class);
+                String prefixMapping =null;
+                if(requestMapping!=null)
+                    prefixMapping= requestMapping.value();
+
+                System.out.println("没报错----");
                 for (Method m : c.getDeclaredMethods()) {
                     if (m.isAnnotationPresent(RequestMapping.class)) {
                         RequestMapping methodMapping = m.getAnnotation(RequestMapping.class);
@@ -689,6 +703,20 @@ public class DispatchServlet extends HttpServlet {
 
     private void instanceMapper() {
         for (Class c : classes) {
+
+            // TODO: 2018/9/7 有问题 
+           /* if(c.isAnnotationPresent(BaseMapper.class)&&c.isInterface()){
+                //通过mapperInvocationHandler生成代理类
+                //传进去数据源和类
+                InvocationHandler mapperInvocationHandler = new BaseMapperInvocationHandler(druidDataSource);
+                //这里生成的代理类总是空的
+                Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
+                System.out.println("           >>>>>>>>" + c.getName());
+                instanceMap.put(c.getName(), o);
+                System.out.println("生成代理类:" + c.getName());
+            }*/
+
+
             if (c.isAnnotationPresent(Mapper.class) && c.isInterface()) {
                 //通过mapperInvocationHandler生成代理类
                 //传进去数据源和类

@@ -1,6 +1,8 @@
 package org.zj.winterbatis.core;
 
 import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.util.DBUtil;
+import org.zj.winterbatis.util.MapperUtil;
 
 import javax.sql.DataSource;
 import java.lang.annotation.Annotation;
@@ -35,7 +37,7 @@ public class MapperInvocationHandler implements InvocationHandler {
         if(method.isAnnotationPresent(Select.class)){
             //根据sql获得结果
             System.out.println("得到的sql       "+getSql(method,args));
-             return ResultHandler.handleResult(method,getSql(method,args), dataSource);
+             return MapperUtil.handleResult(method,getSql(method,args), dataSource);
         }
         System.out.println(result);
         //直接运行sql语句

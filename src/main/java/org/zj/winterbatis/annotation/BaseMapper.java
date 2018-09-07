@@ -6,10 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Created by ZhangJun on 2018/7/8.
+ * Created by ZhangJun on 2018/9/7.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Update {
+@Target(ElementType.TYPE)
+public @interface BaseMapper {
     String value()default "";
 }

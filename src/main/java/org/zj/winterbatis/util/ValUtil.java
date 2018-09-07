@@ -41,5 +41,12 @@ public class ValUtil {
         }
         return result;
     }
-
+    //判断指定字符串是否为空(包括空格和null)
+    public static boolean isBlank(String str){
+        if(str==null||str.equals("")){
+            return true;
+        }
+        str.replaceAll(" ","");
+        return str.equals("");
+    }
 }
