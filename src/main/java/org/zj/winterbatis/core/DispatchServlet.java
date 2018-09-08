@@ -53,7 +53,6 @@ public class DispatchServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
         try {
             handleMapping(req, resp);
         } catch (Exception e) {
@@ -71,7 +70,7 @@ public class DispatchServlet extends HttpServlet {
 
     }
 
-    private void handleMapping(HttpServletRequest req, HttpServletResponse resp) throws IllegalAccessException, InstantiationException, IOException {
+    private void handleMapping(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 
         //处理request注入
         Invoke invoke2 = requestMappingMap.get(req.getRequestURI());
@@ -91,17 +90,13 @@ public class DispatchServlet extends HttpServlet {
 
 
         if (invoke != null) {
-            try {
+
 
                 //为方法的参数列表注入参数
-                Object result = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
+                //Object result = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
 
                 //看你是返回json还是页面
-                handleResponse(invoke.getObj(),result, invoke.getMethod(), req, resp);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+                handleResponse(invoke.getObj(), invoke, req, resp);
         }
     }
 
@@ -253,15 +248,43 @@ public class DispatchServlet extends HttpServlet {
     }
 
 
-    private void handleResponse(Object obj,Object result, Method method, HttpServletRequest req, HttpServletResponse resp) throws Exception {
+    private void handleResponse(Object obj, Invoke invoke, HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        Method method=invoke.getMethod();
+        //如果加了@AutoRestfulResponce
+        if(method.isAnnotationPresent(AutoRestfulResponce.class)){
+            int successCode=-1;
+            if(method.isAnnotationPresent(GetMapping.class)) {
+                successCode=200;
+            }
+            if(method.isAnnotationPresent(DeleteMapping.class)) {
+                successCode=200;
+            }
+            if(method.isAnnotationPresent(PostMapping.class)) {
+                successCode=201;
+            }
+            if(method.isAnnotationPresent(PutMapping.class)) {
+                successCode=200;
+            }
+                //尝试执行代码并把返回值进行json处理
+                try {
+                    Object invoke1 = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
+                    writeJson(invoke1,resp);
+                    //resp.setStatus(successCode);
+                    return;
+                }catch (Exception e){
+                    e.printStackTrace();
+                    resp.setStatus(500);
+                }
+        }
+
         //如果方法上加了ResponseBody注解或者所在的类加了RestController注解就返回json
         if (method.isAnnotationPresent(ResponceBody.class)||obj.getClass().isAnnotationPresent(RestController.class)) {
             //往响应写入json
-            writeJson(result, resp);
+            writeJson(invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req)), resp);
             return;
         }
         //往响应写入页面
-        writePage(result, req, resp);
+        writePage(invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req)), req, resp);
     }
 
     private void writePage(Object result, HttpServletRequest req, HttpServletResponse resp) throws Exception {
@@ -410,8 +433,11 @@ public class DispatchServlet extends HttpServlet {
 
     private void writeJson(Object result, HttpServletResponse resp) throws IOException {
         if (result == null) {
+            System.out.println("返回值为空");
             return;
         }
+
+        System.out.println(result+"  这是响应的内容哦");
 
         resp.setCharacterEncoding("utf-8");
 
@@ -566,40 +592,45 @@ public class DispatchServlet extends HttpServlet {
                 System.out.println(c.getName());
 
                 RequestMapping requestMapping = (RequestMapping) c.getAnnotation(RequestMapping.class);
-                String prefixMapping =null;
+                String prefixMapping ="";
                 if(requestMapping!=null)
                     prefixMapping= requestMapping.value();
 
                 System.out.println("没报错----");
                 for (Method m : c.getDeclaredMethods()) {
+                    String methodMappingStr="";
+                    String requestMethod="";
                     if (m.isAnnotationPresent(RequestMapping.class)) {
                         RequestMapping methodMapping = m.getAnnotation(RequestMapping.class);
-                        Invoke invoke = new Invoke(instanceMap.get(c.getName()), m,"GET");
-                        requestMappingMap.put(prefixMapping + methodMapping.value(), invoke);
+                        methodMappingStr=methodMapping.value();
+                        requestMethod="GET";
                     }
                     if(m.isAnnotationPresent(GetMapping.class)){
                         GetMapping getMapping=m.getAnnotation(GetMapping.class);
-                        Invoke invoke=new Invoke(instanceMap.get(c.getName()),m,"GET");
-                        requestMappingMap.put(prefixMapping+getMapping.value(),invoke);
+                        methodMappingStr=getMapping.value();
+                        requestMethod="GET";
                     }
 
                     if(m.isAnnotationPresent(PostMapping.class)){
-                        PostMapping getMapping=m.getAnnotation(PostMapping.class);
-                        Invoke invoke=new Invoke(instanceMap.get(c.getName()),m,"POST");
-                        requestMappingMap.put(prefixMapping+getMapping.value(),invoke);
+                        PostMapping postMapping=m.getAnnotation(PostMapping.class);
+                        methodMappingStr=postMapping.value();
+                        requestMethod="POST";
                     }
 
                     if(m.isAnnotationPresent(PutMapping.class)){
-                        PutMapping getMapping=m.getAnnotation(PutMapping.class);
-                        Invoke invoke=new Invoke(instanceMap.get(c.getName()),m,"PUT");
-                        requestMappingMap.put(prefixMapping+getMapping.value(),invoke);
+                        PutMapping putMapping=m.getAnnotation(PutMapping.class);
+                        methodMappingStr=putMapping.value();
+                        requestMethod="PUT";
                     }
 
                     if(m.isAnnotationPresent(DeleteMapping.class)){
-                        DeleteMapping getMapping=m.getAnnotation(DeleteMapping.class);
-                        Invoke invoke=new Invoke(instanceMap.get(c.getName()),m,"DELETE");
-                        requestMappingMap.put(prefixMapping+getMapping.value(),invoke);
+                        DeleteMapping deleteMapping=m.getAnnotation(DeleteMapping.class);
+                        methodMappingStr=deleteMapping.value();
+                        requestMethod="DELETE";
                     }
+
+                    requestMappingMap.put(prefixMapping+methodMappingStr,new Invoke(instanceMap.get(c.getName()),m,requestMethod));
+
                 }
             }
 
