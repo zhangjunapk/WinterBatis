@@ -639,18 +639,17 @@ public class DispatchServlet extends HttpServlet {
 
         //因为类全名包含key,应该是模糊匹配，而不是全匹配
         AspectBean aspectBean = getAspectBean(c.getName());
-        if (c.getInterfaces() != null && c.getInterfaces().length != 0) {
+      /*  if (c.getInterfaces() != null && c.getInterfaces().length != 0) {
             //使用jdk的动态代理
 
-            List<Invoke> before = aspectBean != null ? aspectBean.getBefore() : null;
-            List<Invoke> after = aspectBean != null ? aspectBean.getAfter() : null;
+
             JdkInvocationHandler jdkMethodInvocation = new JdkInvocationHandler(instanceMap.get(c.getName()), aspectBean);
             Object o = Proxy.newProxyInstance(jdkMethodInvocation.getClass().getClassLoader(), c.getInterfaces(), jdkMethodInvocation);
 
             System.out.println("        ---使用jdk增强方法" + c.getName());
 
             return o;
-        }
+        }*/
         //如果没有接口使用cglib进行增强
 
 
@@ -704,7 +703,7 @@ public class DispatchServlet extends HttpServlet {
     private void instanceMapper() {
         for (Class c : classes) {
 
-            // TODO: 2018/9/7 有问题 
+            // TODO: 2018/9/7 有问题
            /* if(c.isAnnotationPresent(BaseMapper.class)&&c.isInterface()){
                 //通过mapperInvocationHandler生成代理类
                 //传进去数据源和类

@@ -1,9 +1,11 @@
 package org.zj.winterbatis.controller;
 
 import com.github.pagehelper.PageInfo;
+import org.zj.winterbatis.IStudent;
 import org.zj.winterbatis.annotation.*;
 import org.zj.winterbatis.bean.Student;
 import org.zj.winterbatis.dao.StudentMapper;
+import org.zj.winterbatis.service.IStudentService;
 import org.zj.winterbatis.service.impl.StudentServiceImpl;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +33,7 @@ public class StudentController {
 
 
     @Autofired
-    StudentServiceImpl studentService;
+    IStudentService studentService;
 
 
     @RequestMapping("/view")
@@ -98,7 +100,8 @@ public class StudentController {
     @RequestMapping("/jj")
     @ResponceBody
     public Object jj() {
-        return studentService.f();
+        studentService.findAll();
+        return null;
     }
 
 }
