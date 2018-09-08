@@ -54,11 +54,12 @@ public class FormateUtil {
     static public String toLine(String name) {
 
         System.out.println(name + "    需要转换成下划线");
-
+        name=name.substring(0,1).toLowerCase()+name.substring(1);
         for (int i = 0; i < name.length(); i++) {
             if (name.substring(i, i + 1).equals(name.substring(i, i + 1).toUpperCase())) {
                 //说明当前字符是大写的
                 name = name.substring(0, i) + "_" + name.substring(i, i + 1).toLowerCase() + name.substring(i + 1);
+                System.out.println(name);
             }
         }
         return name;

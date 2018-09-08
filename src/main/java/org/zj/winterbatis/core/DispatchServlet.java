@@ -704,22 +704,22 @@ public class DispatchServlet extends HttpServlet {
         for (Class c : classes) {
 
             // TODO: 2018/9/7 有问题
-           /* if(c.isAnnotationPresent(BaseMapper.class)&&c.isInterface()){
+            if(c.isAnnotationPresent(BaseMapper.class)&&c.isInterface()){
                 //通过mapperInvocationHandler生成代理类
                 //传进去数据源和类
-                InvocationHandler mapperInvocationHandler = new BaseMapperInvocationHandler(druidDataSource);
+                InvocationHandler mapperInvocationHandler = new BaseMapperInvocationHandler(c,druidDataSource);
                 //这里生成的代理类总是空的
                 Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
                 System.out.println("           >>>>>>>>" + c.getName());
                 instanceMap.put(c.getName(), o);
                 System.out.println("生成代理类:" + c.getName());
-            }*/
+            }
 
 
             if (c.isAnnotationPresent(Mapper.class) && c.isInterface()) {
                 //通过mapperInvocationHandler生成代理类
                 //传进去数据源和类
-                MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler(druidDataSource);
+                MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler(druidDataSource,c);
                 //这里生成的代理类总是空的
                 Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
 

@@ -1,9 +1,12 @@
 package org.zj.winterbatis.bean;
 
+import org.zj.winterbatis.annotation.Id;
+
 /**
  * Created by ZhangJun on 2018/9/7.
  */
 public class Teacher {
+    @Id
     private Integer id;
     private String username;
     private Integer age;

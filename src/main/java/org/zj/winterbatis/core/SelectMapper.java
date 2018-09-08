@@ -1,6 +1,5 @@
 package org.zj.winterbatis.core;
 
-import org.zj.winterbatis.annotation.Delete;
 import org.zj.winterbatis.annotation.Select;
 
 import java.util.List;
@@ -12,7 +11,7 @@ public interface SelectMapper<T> {
     @Select("select * from [entity]")
     List<T> selectAll();
 
-    @Select("select * from [entity] [example]")
+    @Select("select * from [entity] where [example]")
     List<T> selectByExample(Example example);
 
     @Select("select * from [entity] where [pk] =[param_0]")

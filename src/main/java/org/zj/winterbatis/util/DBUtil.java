@@ -78,6 +78,7 @@ public class DBUtil {
      */
     public static boolean runSql(String sql,DataSource dataSource) throws SQLException {
         Statement statement = getStatement(dataSource);
+        System.out.println("将要直接执行sql:  "+sql);
         return statement.execute(sql);
     }
 
@@ -103,6 +104,11 @@ public class DBUtil {
             result.add(metaData.getColumnName(i));
         }
         resultSet.close();
+
+        for(String name:result){
+            System.out.println(name+"        这是表的字段名");
+        }
+
         return result;
     }
 }

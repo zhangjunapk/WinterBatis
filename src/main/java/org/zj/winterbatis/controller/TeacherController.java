@@ -19,9 +19,9 @@ public class TeacherController {
     @GetMapping("/cc")
     public void cc(){
         teacherMapper.insert(new Teacher(1,"张君",19));
-        System.out.println(teacherMapper.selectByPrimaryKey(1));
         teacherMapper.updateByPrimaryKey(new Teacher(1,"你懂得",99));
         List<Teacher> teachers = teacherMapper.selectAll();
+        System.out.println(teachers.size()+"  获得的大小");
         for(Teacher t:teachers){
             System.out.println(t.toString());
         }

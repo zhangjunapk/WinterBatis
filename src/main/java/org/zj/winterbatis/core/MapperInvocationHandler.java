@@ -18,7 +18,9 @@ import java.sql.Statement;
  */
 public class MapperInvocationHandler implements InvocationHandler {
     DataSource dataSource;
-    public MapperInvocationHandler(DataSource dataSource){
+    private Class interfacee;
+    public MapperInvocationHandler(DataSource dataSource,Class c){
+     this.interfacee=c;
         this.dataSource=dataSource;
     }
 

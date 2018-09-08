@@ -58,7 +58,7 @@ public class Example<T> {
     public String getCondition() {
         if (equalMap.size() == 0 && likeMap.size() == 0)
             return "";
-        String result = " where ";
+        String result ="";
         for (Map.Entry<String, String> entry : equalMap.entrySet()) {
             result += entry.getKey() + "=" + entry.getValue() + " and ";
         }

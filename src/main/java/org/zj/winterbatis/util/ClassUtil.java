@@ -5,13 +5,10 @@ package org.zj.winterbatis.util;
  */
 
 
-import org.zj.winterbatis.DoThing;
-import org.zj.winterbatis.IStudent;
+import jdk.internal.org.objectweb.asm.TypeReference;
+import org.zj.winterbatis.dao.TeacherMapper;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,10 +39,17 @@ public class ClassUtil {
      * @return
      */
     static public Class getListGeneric(Method method) throws ClassNotFoundException {
+
+        System.out.println(method);
+
         try {
             Type genericReturnType = method.getGenericReturnType();
             //获得泛型名
             String name = genericReturnType.toString().substring(genericReturnType.toString().indexOf("<") + 1, genericReturnType.toString().length() - 1);
+            System.out.println(name+"  泛型 名");
+            if(name.equals("T"))
+                return null;
+
             Class type = Class.forName(name);
             return type;
         }catch (Exception e){
@@ -64,23 +68,14 @@ public class ClassUtil {
      */
     static public Class getReturnType(Method method) throws ClassNotFoundException {
         String s = method.getGenericReturnType().toString();
+        if(s.equals("void"))
+            return null;
+
         return Class.forName(s);
     }
 
     static public Method getMethod(Class c,String methodName,Class[] objects) throws NoSuchMethodException {
         return (Method) c.getMethod(methodName,c);
-    }
-
-    static public List<Class> getInterfaceGenerics(Class c){
-
-        List<Class> result=new ArrayList<>();
-
-        if(!c.isInterface()) return null;
-        TypeVariable[] typeParameters = c.getTypeParameters();
-        for(TypeVariable t:typeParameters){
-            System.out.println(t.getTypeName()+" "+t.getName());
-        }
-        return null;
     }
 
     /**
@@ -95,7 +90,47 @@ public class ClassUtil {
         return declaredField.get(o);
     }
 
+
+    /**
+     * 获得返回的泛型
+     * @param method
+     * @return
+     */
+   static public Class getGeneric(Method method) throws ClassNotFoundException {
+        if(isListReturn(method)){
+            return getListGeneric(method);
+        }
+        return getReturnType(method);
+    }
+
+    /**
+     * 获得接口的泛型
+     * @param c
+     * @return
+     */
+    static public Class getInterfaceGeneric(Class c){
+        Type[] types = c.getGenericInterfaces();
+
+        for (Type type : types) {
+            if (type instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                for(Type actualTypeArgument : actualTypeArguments) {
+                    String typeName = actualTypeArgument.getTypeName();
+                    try {
+                        return Class.forName(typeName);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+
     public static void main(String[] args) {
-        getInterfaceGenerics(IStudent.class);
+        getInterfaceGeneric(TeacherMapper.class);
     }
 }

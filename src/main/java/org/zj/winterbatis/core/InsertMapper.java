@@ -7,5 +7,5 @@ import org.zj.winterbatis.annotation.Insert;
  */
 public interface InsertMapper<T> {
     @Insert("insert into [entity] [each_insert]")
-    void insert(T t);
+    T insert(T t);
 }

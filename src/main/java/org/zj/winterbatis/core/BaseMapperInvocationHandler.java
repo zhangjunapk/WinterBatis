@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.text.Normalizer;
 import java.util.List;
 
 /**
@@ -18,9 +19,10 @@ import java.util.List;
 
 public class BaseMapperInvocationHandler implements InvocationHandler {
     private DataSource dataSource;
-
-    public BaseMapperInvocationHandler(DataSource dataSource) {
+    private Class interfacee;
+    public BaseMapperInvocationHandler(Class c,DataSource dataSource) {
         this.dataSource = dataSource;
+        this.interfacee=c;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class BaseMapperInvocationHandler implements InvocationHandler {
 
             System.out.println("要执行的代码");
 
-            String sql = parseSql(method, select.value(), objects);
+            String sql = parseSql(MapperUtil.getParentInterfaceGeneric(interfacee),method, select.value(), objects);
 
             System.out.println("解析后的代码:"+ sql);
 
@@ -43,13 +45,13 @@ public class BaseMapperInvocationHandler implements InvocationHandler {
             if (!ClassUtil.isListReturn(method))
                 return o;
 
-            return MapperUtil.handleResult(method, sql, dataSource);
+            return MapperUtil.handleResult(MapperUtil.getParentInterfaceGeneric(interfacee),method, sql, dataSource);
         }
         String rawSql = getSql(method);
 
         System.out.println("转换前的代码:   "+rawSql);
 
-        rawSql = parseSql(method, rawSql, objects[0]);
+        rawSql = parseSql(ClassUtil.getInterfaceGeneric(interfacee),method, rawSql, objects[0]);
 
         System.out.println(" 要执行的代码  "+rawSql);
 
@@ -74,18 +76,30 @@ public class BaseMapperInvocationHandler implements InvocationHandler {
         return null;
     }
 
-    //根据sql表达式来解析成
-    private String parseSql(Method method, String rawSql, Object object) throws ClassNotFoundException, SQLException, NoSuchFieldException, IllegalAccessException {
+    /**
+     *对指定的sql 进行解析
+     * @param c 表示实体类
+     * @param method
+     * @param rawSql
+     * @param object
+     * @return
+     * @throws ClassNotFoundException
+     * @throws SQLException
+     * @throws NoSuchFieldException
+     * @throws IllegalAccessException
+     */
+    private String parseSql(Class c,Method method, String rawSql, Object object) throws ClassNotFoundException, SQLException, NoSuchFieldException, IllegalAccessException {
         //表示数据实体类
-        Class c;
         String tablenName=null;
-        if (ClassUtil.isListReturn(method)) {
-            c = ClassUtil.getListGeneric(method);
-        } else {
-            c = ClassUtil.getReturnType(method);
-        }
 
-        tablenName= FormateUtil.toLine(c.getName());
+
+        System.out.println(ClassUtil.getInterfaceGeneric(c));
+
+        // TODO: 2018/9/8  
+        tablenName= FormateUtil.toLine(c.getSimpleName());
+        
+
+        
         if(c.isAnnotationPresent(Table.class)){
             Table annotation = (Table) c.getAnnotation(Table.class);
             tablenName=annotation.value();
@@ -94,15 +108,9 @@ public class BaseMapperInvocationHandler implements InvocationHandler {
         //对sql进行解析
         if (rawSql.contains("[entity]")) {
             //替换掉
-            String name = c.getName();
-            if (c.isAnnotationPresent(Id.class)) {
-                Id ano = (Id) c.getAnnotation(Id.class);
-                name = ano.value();
-            }
-
-            rawSql = rawSql.replace("[entity]", name);
+                rawSql = rawSql.replace("[entity]", tablenName);
         }
-        if (rawSql.contains("pk"))
+        if (rawSql.contains("[pk]"))
             rawSql = rawSql.replace("[pk]", MapperUtil.getIdName(c));
 
         if (rawSql.contains("[param_0]"))
@@ -114,26 +122,54 @@ public class BaseMapperInvocationHandler implements InvocationHandler {
         if (rawSql.contains("[each_insert]")) {
             //遍历传递过来的参数中的每个字段
 
+            System.out.println("之前--------");
+            System.out.println(rawSql);
+                System.out.println("insert");
 
-            if (method.isAnnotationPresent(Insert.class)) {
                 rawSql+="(";
                 List<String> fields = DBUtil.getFields(tablenName, dataSource);
                 //insert into student(username,password,age) values();
                 for(String str:fields){
                     rawSql+=str+",";
+                    System.out.println(rawSql);
                 }
                 rawSql=rawSql.substring(0,rawSql.length()-1);
                 rawSql+=") values(";
                 //遍历获取实体bean的每个字段的值
 
                 for(String s:fields){
-                    rawSql+=ClassUtil.getVal(s,object)+",";
+                    rawSql+="'"+ClassUtil.getVal(s,object)+"',";
+                    System.out.println(rawSql);
                 }
                 rawSql=rawSql.substring(0,rawSql.length()-1);
                 rawSql+=")";
-            }
+
+                rawSql=rawSql.replace("[each_insert]","");
+
+            System.out.println("之后--------");
+            System.out.println(rawSql);
 
         }
+
+        if(rawSql.contains("[update_set]")){
+            // username='zhangsan',password='lisi'
+            //遍历这个表中的所有字段
+            String str="";
+            for(String name:DBUtil.getFields(FormateUtil.toLine(c.getSimpleName()),dataSource)){
+                str+=name+"='"+ClassUtil.getVal(FormateUtil.toCamelCase(0,name),object)+"',";
+                System.out.println(rawSql);
+            }
+            str=str.substring(0,str.length()-1);
+            rawSql=rawSql.replace("[update_set]",str);
+        }
+
+        if(rawSql.contains("[pk_condition]")){
+            String idName = MapperUtil.getIdName(c);
+            rawSql+= FormateUtil.toLine(idName)+"="+ClassUtil.getVal(idName,object);
+            System.out.println(rawSql);
+        }
+        rawSql=rawSql.replace("[pk_condition]","");
+
         return rawSql;
     }
 

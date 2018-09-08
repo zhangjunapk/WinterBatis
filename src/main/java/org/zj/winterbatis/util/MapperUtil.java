@@ -5,6 +5,7 @@ import org.zj.winterbatis.annotation.Id;
 import org.zj.winterbatis.annotation.Table;
 import org.zj.winterbatis.core.Example;
 import org.zj.winterbatis.core.ListResultHandler;
+import org.zj.winterbatis.dao.TeacherMapper;
 import org.zj.winterbatis.enums.SqlMethod;
 
 import javax.sql.DataSource;
@@ -58,7 +59,10 @@ public class MapperUtil {
      * @return
      */
     public static Object handleResult(Method method, String sql, DataSource dataSource) throws SQLException, ClassNotFoundException {
+        return handleResult(ClassUtil.getGeneric(method),method,sql,dataSource);
+    }
 
+    public static Object handleResult(Class c,Method method,String sql,DataSource dataSource) throws SQLException, ClassNotFoundException {
 
         System.out.println("这是sql语句:         >  "+sql);
 
@@ -72,20 +76,21 @@ public class MapperUtil {
         ResultSet resultSet = statement.executeQuery(sql);
 
         if(ClassUtil.isListReturn(method)){
-            if(ClassUtil.getListGeneric(method)==null)
+            if (c==null)
                 return null;
 
-                System.out.println("转换的方法走了");
+            System.out.println("转换的方法走了");
 
-                try {
-                    return new ListResultHandler<>().getListResult(resultSet,ClassUtil.getListGeneric(method));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            try {
+                return new ListResultHandler<>().getListResult(resultSet,c);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
         }
         return null;
     }
+
 
     /**
      * 获得指定class中的id字段名
@@ -94,9 +99,21 @@ public class MapperUtil {
      */
     static public String getIdName(Class c){
         for(Field f:c.getDeclaredFields()){
+            f.setAccessible(true);
             if(f.isAnnotationPresent(Id.class))
                 return f.getName();
         }
-        return null;
+        return FormateUtil.toLine(c.getSimpleName());
     }
+
+    /**
+     * 获得一个接口的父接口的泛型
+     * @param c
+     * @return
+     */
+    static public Class getParentInterfaceGeneric(Class c){
+        return ClassUtil.getInterfaceGeneric(c);
+    }
+
+
 }
