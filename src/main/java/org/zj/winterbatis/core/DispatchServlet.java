@@ -80,24 +80,21 @@ public class DispatchServlet extends HttpServlet {
         Invoke invoke = requestMappingMap.get(req.getRequestURI());
 
         //这里不光要根据访问url获得,还要根据请求方法来获得
-        System.out.println("这是请求方法        >>>>"+req.getMethod());
+        System.out.println("这是请求方法        >>>>" + req.getMethod());
         System.out.println("请求:" + req.getRequestURI());
 
-        if(invoke!=null&&!invoke.getRequestMethod().equals(req.getMethod())){
-            resp.getWriter().write("<h1>404</h1>");
+        if (invoke == null) {
+            resp.setStatus(404);
+            return;
+        }
+        //方法不匹配 比如请求的是get 方法，但是uriMappingMap中并没有这个方法
+        if (!invoke.getRequestMethod().equals(req.getMethod())) {
+            resp.setStatus(404);
             return;
         }
 
-
-        if (invoke != null) {
-
-
-                //为方法的参数列表注入参数
-                //Object result = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
-
-                //看你是返回json还是页面
-                handleResponse(invoke.getObj(), invoke, req, resp);
-        }
+        //看你是返回rest响应 还是json还是页面
+        handleResponse(invoke.getObj(), invoke, req, resp);
     }
 
     private void handleRequestResponseDI(Object obj, HttpServletRequest req, HttpServletResponse resp) throws IllegalAccessException, InstantiationException {
@@ -249,36 +246,36 @@ public class DispatchServlet extends HttpServlet {
 
 
     private void handleResponse(Object obj, Invoke invoke, HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        Method method=invoke.getMethod();
+        Method method = invoke.getMethod();
         //如果加了@AutoRestfulResponce
-        if(method.isAnnotationPresent(AutoRestfulResponce.class)){
-            int successCode=-1;
-            if(method.isAnnotationPresent(GetMapping.class)) {
-                successCode=200;
+        if (method.isAnnotationPresent(AutoRestfulResponce.class)) {
+            int successCode = -1;
+            if (method.isAnnotationPresent(GetMapping.class)) {
+                successCode = 200;
             }
-            if(method.isAnnotationPresent(DeleteMapping.class)) {
-                successCode=200;
+            if (method.isAnnotationPresent(DeleteMapping.class)) {
+                successCode = 200;
             }
-            if(method.isAnnotationPresent(PostMapping.class)) {
-                successCode=201;
+            if (method.isAnnotationPresent(PostMapping.class)) {
+                successCode = 201;
             }
-            if(method.isAnnotationPresent(PutMapping.class)) {
-                successCode=200;
+            if (method.isAnnotationPresent(PutMapping.class)) {
+                successCode = 200;
             }
-                //尝试执行代码并把返回值进行json处理
-                try {
-                    Object invoke1 = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
-                    writeJson(invoke1,resp);
-                    //resp.setStatus(successCode);
-                    return;
-                }catch (Exception e){
-                    e.printStackTrace();
-                    resp.setStatus(500);
-                }
+            //尝试执行代码并把返回值进行json处理
+            try {
+                Object invoke1 = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
+                writeJson(invoke1, resp);
+                //resp.setStatus(successCode);
+                return;
+            } catch (Exception e) {
+                e.printStackTrace();
+                resp.setStatus(500);
+            }
         }
 
         //如果方法上加了ResponseBody注解或者所在的类加了RestController注解就返回json
-        if (method.isAnnotationPresent(ResponceBody.class)||obj.getClass().isAnnotationPresent(RestController.class)) {
+        if (method.isAnnotationPresent(ResponceBody.class) || obj.getClass().isAnnotationPresent(RestController.class)) {
             //往响应写入json
             writeJson(invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req)), resp);
             return;
@@ -437,7 +434,7 @@ public class DispatchServlet extends HttpServlet {
             return;
         }
 
-        System.out.println(result+"  这是响应的内容哦");
+        System.out.println(result + "  这是响应的内容哦");
 
         resp.setCharacterEncoding("utf-8");
 
@@ -490,7 +487,7 @@ public class DispatchServlet extends HttpServlet {
 
         //先对切面进行初始化
         for (Class c : classes) {
-            if (c.isAnnotationPresent(Aspect.class)&&c.isAnnotationPresent(Condition.class)) {
+            if (c.isAnnotationPresent(Aspect.class) && c.isAnnotationPresent(Condition.class)) {
                 List<Invoke> before = new ArrayList<>();
                 List<Invoke> after = new ArrayList<>();
 
@@ -552,7 +549,7 @@ public class DispatchServlet extends HttpServlet {
     private void doDI() {
 
         System.out.println("----------------");
-        for(String s:instanceMap.keySet()){
+        for (String s : instanceMap.keySet()) {
             System.out.println(s);
         }
         System.out.println("-----------------");
@@ -571,7 +568,7 @@ public class DispatchServlet extends HttpServlet {
                         System.out.println(instanceMap.get(field.getType().getName()) != null);
                         System.out.println("----------");
 
-                        if(instanceMap.get(field.getType().getName())==null)
+                        if (instanceMap.get(field.getType().getName()) == null)
                             continue;
 
                         field.set(instanceMap.get(c.getName()), instanceMap.get(field.getType().getName()));
@@ -587,49 +584,49 @@ public class DispatchServlet extends HttpServlet {
     private void setUrlMapping() {
         //扫描所有
         for (Class c : classes) {
-            if (c.isAnnotationPresent(Controller.class)||c.isAnnotationPresent(RestController.class)) {
+            if (c.isAnnotationPresent(Controller.class) || c.isAnnotationPresent(RestController.class)) {
 
                 System.out.println(c.getName());
 
                 RequestMapping requestMapping = (RequestMapping) c.getAnnotation(RequestMapping.class);
-                String prefixMapping ="";
-                if(requestMapping!=null)
-                    prefixMapping= requestMapping.value();
+                String prefixMapping = "";
+                if (requestMapping != null)
+                    prefixMapping = requestMapping.value();
 
                 System.out.println("没报错----");
                 for (Method m : c.getDeclaredMethods()) {
-                    String methodMappingStr="";
-                    String requestMethod="";
+                    String methodMappingStr = "";
+                    String requestMethod = "";
                     if (m.isAnnotationPresent(RequestMapping.class)) {
                         RequestMapping methodMapping = m.getAnnotation(RequestMapping.class);
-                        methodMappingStr=methodMapping.value();
-                        requestMethod="GET";
+                        methodMappingStr = methodMapping.value();
+                        requestMethod = "GET";
                     }
-                    if(m.isAnnotationPresent(GetMapping.class)){
-                        GetMapping getMapping=m.getAnnotation(GetMapping.class);
-                        methodMappingStr=getMapping.value();
-                        requestMethod="GET";
-                    }
-
-                    if(m.isAnnotationPresent(PostMapping.class)){
-                        PostMapping postMapping=m.getAnnotation(PostMapping.class);
-                        methodMappingStr=postMapping.value();
-                        requestMethod="POST";
+                    if (m.isAnnotationPresent(GetMapping.class)) {
+                        GetMapping getMapping = m.getAnnotation(GetMapping.class);
+                        methodMappingStr = getMapping.value();
+                        requestMethod = "GET";
                     }
 
-                    if(m.isAnnotationPresent(PutMapping.class)){
-                        PutMapping putMapping=m.getAnnotation(PutMapping.class);
-                        methodMappingStr=putMapping.value();
-                        requestMethod="PUT";
+                    if (m.isAnnotationPresent(PostMapping.class)) {
+                        PostMapping postMapping = m.getAnnotation(PostMapping.class);
+                        methodMappingStr = postMapping.value();
+                        requestMethod = "POST";
                     }
 
-                    if(m.isAnnotationPresent(DeleteMapping.class)){
-                        DeleteMapping deleteMapping=m.getAnnotation(DeleteMapping.class);
-                        methodMappingStr=deleteMapping.value();
-                        requestMethod="DELETE";
+                    if (m.isAnnotationPresent(PutMapping.class)) {
+                        PutMapping putMapping = m.getAnnotation(PutMapping.class);
+                        methodMappingStr = putMapping.value();
+                        requestMethod = "PUT";
                     }
 
-                    requestMappingMap.put(prefixMapping+methodMappingStr,new Invoke(instanceMap.get(c.getName()),m,requestMethod));
+                    if (m.isAnnotationPresent(DeleteMapping.class)) {
+                        DeleteMapping deleteMapping = m.getAnnotation(DeleteMapping.class);
+                        methodMappingStr = deleteMapping.value();
+                        requestMethod = "DELETE";
+                    }
+
+                    requestMappingMap.put(prefixMapping + methodMappingStr, new Invoke(instanceMap.get(c.getName()), m, requestMethod));
 
                 }
             }
@@ -646,7 +643,7 @@ public class DispatchServlet extends HttpServlet {
     private void instanceController() throws Exception {
 
         for (Class c : classes) {
-            if (c.isAnnotationPresent(Controller.class)||c.isAnnotationPresent(RestController.class)) {
+            if (c.isAnnotationPresent(Controller.class) || c.isAnnotationPresent(RestController.class)) {
                 //这里还要进行切面判断，看是否要生成代理类对方法进行增强
                 if (needEnhance(c.getName())) {
                     //你懂得
@@ -735,10 +732,10 @@ public class DispatchServlet extends HttpServlet {
         for (Class c : classes) {
 
             // TODO: 2018/9/7 有问题
-            if(c.isAnnotationPresent(BaseMapper.class)&&c.isInterface()){
+            if (c.isAnnotationPresent(BaseMapper.class) && c.isInterface()) {
                 //通过mapperInvocationHandler生成代理类
                 //传进去数据源和类
-                InvocationHandler mapperInvocationHandler = new BaseMapperInvocationHandler(c,druidDataSource);
+                InvocationHandler mapperInvocationHandler = new BaseMapperInvocationHandler(c, druidDataSource);
                 //这里生成的代理类总是空的
                 Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
                 System.out.println("           >>>>>>>>" + c.getName());
@@ -750,7 +747,7 @@ public class DispatchServlet extends HttpServlet {
             if (c.isAnnotationPresent(Mapper.class) && c.isInterface()) {
                 //通过mapperInvocationHandler生成代理类
                 //传进去数据源和类
-                MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler(druidDataSource,c);
+                MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler(druidDataSource, c);
                 //这里生成的代理类总是空的
                 Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
 
