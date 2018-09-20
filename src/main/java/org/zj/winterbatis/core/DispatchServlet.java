@@ -9,6 +9,7 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.zj.winterbatis.annotation.*;
 import org.zj.winterbatis.annotation.BaseMapper;
+import org.zj.winterbatis.util.RabbitMQUtil;
 import org.zj.winterbatis.util.ValUtil;
 
 import javax.servlet.ServletConfig;
@@ -51,6 +52,8 @@ public class DispatchServlet extends HttpServlet {
 
     Map<String, AspectBean> aspectBeanMap = new HashMap<>();
 
+    private Rabbit rabbit;
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
@@ -84,11 +87,15 @@ public class DispatchServlet extends HttpServlet {
         System.out.println("请求:" + req.getRequestURI());
 
         if (invoke == null) {
+
+            System.out.println("没有在mappingMap中找到");
+
             resp.setStatus(404);
             return;
         }
         //方法不匹配 比如请求的是get 方法，但是uriMappingMap中并没有这个方法
         if (!invoke.getRequestMethod().equals(req.getMethod())) {
+            System.out.println("方法不匹配");
             resp.setStatus(404);
             return;
         }
@@ -475,7 +482,11 @@ public class DispatchServlet extends HttpServlet {
         }
 
         //对对象进行注入
-        doDI();
+        try {
+            doDI();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         //扫描所有controller/然后将RequestMapping和对象/方法的对应关系放到容器里
         setUrlMapping();
@@ -546,7 +557,7 @@ public class DispatchServlet extends HttpServlet {
         }
     }
 
-    private void doDI() {
+    private void doDI() throws IllegalAccessException {
 
         System.out.println("----------------");
         for (String s : instanceMap.keySet()) {
@@ -559,6 +570,17 @@ public class DispatchServlet extends HttpServlet {
 
             for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Autofired.class)) {
+
+                    //处理rabbitMQ生产者的注入
+                    if(field.isAnnotationPresent(RabbitProducter.class)){
+                        //获得这个上面的注解
+                        RabbitProducter rabbitProducter=field.getAnnotation(RabbitProducter.class);
+
+                        System.out.println("------------------找到了 ，生产者 然后给你注入进去");
+
+                        field.set(instanceMap.get(c.getName()), RabbitMQUtil.getProxyObject(rabbit,RabbitMQProducter.class,rabbitProducter));
+                    }
+
                     try {
                         System.out.println("       为" + c.getName() + "注入" + field.getName());
 
@@ -575,6 +597,9 @@ public class DispatchServlet extends HttpServlet {
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                     }
+
+
+
                 }
 
             }
@@ -584,6 +609,9 @@ public class DispatchServlet extends HttpServlet {
     private void setUrlMapping() {
         //扫描所有
         for (Class c : classes) {
+
+            System.out.println(c.getName());
+
             if (c.isAnnotationPresent(Controller.class) || c.isAnnotationPresent(RestController.class)) {
 
                 System.out.println(c.getName());
@@ -625,6 +653,8 @@ public class DispatchServlet extends HttpServlet {
                         methodMappingStr = deleteMapping.value();
                         requestMethod = "DELETE";
                     }
+
+                    System.out.println("----------放进去:   "+prefixMapping+methodMappingStr);
 
                     requestMappingMap.put(prefixMapping + methodMappingStr, new Invoke(instanceMap.get(c.getName()), m, requestMethod));
 
@@ -762,7 +792,13 @@ public class DispatchServlet extends HttpServlet {
 
 
     private void initAnnotation() {
+
+        rabbit= (Rabbit) config.getAnnotation(Rabbit.class);
+
         BasePackage basePackage = (BasePackage) config.getAnnotation(BasePackage.class);
+
+        System.out.println(basePackage.value());
+
         MapperScan mapperScan = (MapperScan) config.getAnnotation(MapperScan.class);
         AspectScan aspectScan = (AspectScan) config.getAnnotation(AspectScan.class);
 
@@ -852,7 +888,7 @@ public class DispatchServlet extends HttpServlet {
     }
 
     public String getProjectPath() {
-        return "E:\\java\\base\\winter-batis";
+        return "D:\\java\\base\\WinterBatis";
         //return System.getProperty("user.dir");
     }
 

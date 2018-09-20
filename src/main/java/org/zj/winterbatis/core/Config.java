@@ -12,6 +12,7 @@ import org.zj.winterbatis.annotation.*;
 @ViewPrefix("/html/")
 @ViewSuffix(".html")
 @WebPath("webapp")
+@Rabbit(host = "localhost",port = 15635,username = "admin",password = "admin")
 @DataSource(username = "root",password = "",url="jdbc:mysql://localhost:3306/bilibili",driver = "com.mysql.jdbc.Driver")
 public class Config {
 }

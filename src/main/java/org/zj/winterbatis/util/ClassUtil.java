@@ -5,12 +5,12 @@ package org.zj.winterbatis.util;
  */
 
 
-import jdk.internal.org.objectweb.asm.TypeReference;
 import org.zj.winterbatis.dao.TeacherMapper;
 
-import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 /**
  * 反射工具

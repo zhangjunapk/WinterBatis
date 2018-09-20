@@ -1,10 +1,9 @@
 package org.zj.winterbatis.aspect;
 
-import com.sun.xml.internal.messaging.saaj.util.SAAJUtil;
 import org.zj.winterbatis.annotation.After;
 import org.zj.winterbatis.annotation.Aspect;
-import org.zj.winterbatis.annotation.Condition;
 import org.zj.winterbatis.annotation.Before;
+import org.zj.winterbatis.annotation.Condition;
 /**
  * Created by ZhangJun on 2018/7/7.
  */
