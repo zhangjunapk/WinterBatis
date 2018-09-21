@@ -2,17 +2,16 @@ package org.zj.winterbatis.core;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.cglib.proxy.Callback;
-import net.sf.cglib.proxy.Enhancer;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.quartz.SchedulerException;
+import org.zj.winterbatis.Config;
 import org.zj.winterbatis.annotation.*;
-import org.zj.winterbatis.annotation.BaseMapper;
 import org.zj.winterbatis.classhandler.ControllerClassHandler;
 import org.zj.winterbatis.classhandler.MapperClassHandler;
 import org.zj.winterbatis.classhandler.ServiceClassHandler;
+import org.zj.winterbatis.util.ClassUtil;
 import org.zj.winterbatis.util.RabbitMQUtil;
 import org.zj.winterbatis.util.ValUtil;
 
@@ -278,7 +277,7 @@ public class DispatchServlet extends HttpServlet {
             try {
                 Object invoke1 = invoke.getMethod().invoke(invoke.getObj(), getParamer(invoke.getMethod(), req));
                 writeJson(invoke1, resp);
-                //resp.setStatus(successCode);
+                resp.setStatus(successCode);
                 return;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -468,7 +467,11 @@ public class DispatchServlet extends HttpServlet {
         initAnnotation();
 
         //将切面中的对象保存到容器里
-        initClass();
+        try {
+            initClass();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         //将切面中映射关系放到容器中
         try {
@@ -524,42 +527,10 @@ public class DispatchServlet extends HttpServlet {
         }
     }
 
-    private void initClass() {
-        initAspectClass();
-        initBaseClass();
-        initMapperClass();
-    }
+    private void initClass() throws IOException, ClassNotFoundException {
 
-    private void initMapperClass() {
-        for (String packageName : mapperPackage) {
-            try {
-                addClass(classes, packageName);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    private void initBaseClass() {
-        for (String packageName : basePackage) {
-            try {
-                addClass(classes, packageName);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    private void initAspectClass() {
-        for (String packageName : aspectPackage) {
-            try {
-                addClass(classes, packageName);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        //将当前项目中的所有类填充到容器里
+        ClassUtil.inflateClass(classes);
     }
 
     private void doDI() throws IllegalAccessException {
@@ -575,7 +546,7 @@ public class DispatchServlet extends HttpServlet {
 
             for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Autofired.class)) {
-
+                    field.setAccessible(true);
                     //处理rabbitMQ生产者的注入
                     if(field.isAnnotationPresent(RabbitProducter.class)){
                         //获得这个上面的注解
@@ -589,7 +560,7 @@ public class DispatchServlet extends HttpServlet {
                     try {
                         System.out.println("       为" + c.getName() + "注入" + field.getName());
 
-                        field.setAccessible(true);
+
                         System.out.println("-------");
                         System.out.println(instanceMap.get(c.getName()) != null);
                         System.out.println(instanceMap.get(field.getType().getName()) != null);
@@ -739,61 +710,6 @@ public class DispatchServlet extends HttpServlet {
 
         IsMaven isMaven = (IsMaven) config.getAnnotation(IsMaven.class);
         this.isMaven = isMaven.value();
-    }
-
-    private void addClass(List<Class> classes, String packgeName) throws Exception {
-        ClassLoader classLoader = DispatchServlet.class.getClassLoader();
-        packgeName = packgeName.replace(".", "/");
-        String path = getPackagePath(packgeName, this.isMaven);
-
-        File file = new File(path);
-
-        System.out.println(file.getAbsolutePath());
-
-        inflateClass(classes, file);
-    }
-
-    public void inflateClass(List<Class> classes, File file) {
-        if (file.isDirectory()) {
-            for (File f : file.listFiles()) {
-                inflateClass(classes, f);
-            }
-        }
-        if (file.isFile()) {
-            handleAddClass(classes, file);
-        }
-    }
-
-    private void handleAddClass(List<Class> classes, File file) {
-
-
-        if (file.getAbsolutePath().endsWith(".java")) {
-            String path = file.getAbsolutePath();
-
-            String srcPath = getSrcPath(this.isMaven);
-            path = path.replace(srcPath, "");
-            String className = path.replace("\\", ".");
-            //E:\java\base\winter-batis\src\main\java\
-
-            try {
-                classes.add(Class.forName(className.substring(1, className.lastIndexOf("."))));
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    public String getPackagePath(String packageName, boolean isMaven) {
-        packageName = packageName.replace(".", "/");
-        return getSrcPath(isMaven) + "/" + packageName;
-    }
-
-    public String getSrcPath(boolean isMaven) {
-        if (isMaven) {
-            return getProjectPath() + "\\src\\main\\java";
-        }
-        return getProjectPath() + "\\src\\java";
     }
 
     public String getProjectPath() {

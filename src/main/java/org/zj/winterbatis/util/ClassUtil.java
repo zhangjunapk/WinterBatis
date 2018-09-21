@@ -7,10 +7,14 @@ package org.zj.winterbatis.util;
 
 import org.zj.winterbatis.dao.TeacherMapper;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 反射工具
@@ -130,7 +134,90 @@ public class ClassUtil {
     }
 
 
-    public static void main(String[] args) {
-        getInterfaceGeneric(TeacherMapper.class);
+    /**
+     * 递归获得指定文件夹下的所有类
+     * @param classes
+     * @param file
+     */
+    public static void inflateClassByClassLoader(List<Class> classes,File file) throws IOException, ClassNotFoundException {
+        BaseClassLoader baseClassLoader = new BaseClassLoader();
+
+        if(file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                inflateClassByClassLoader(classes, f);
+            }
+        }
+        if(file.isFile()&&file.getName().endsWith(".class"))
+            classes.add(baseClassLoader.getClass(getClassName(file),file));
+    }
+
+    /**
+     * 将当前项目的所有class填充到指定容器,通过类名
+     * @param classes
+     * @throws IOException
+     */
+    public static void inflateClass(List<Class> classes) throws IOException, ClassNotFoundException {
+        //inflateClassByClassLoader(classes,new File(getClassPath()));
+        inflateClassByName(classes,new File(getClassPath()));
+    }
+
+
+    private static void inflateClassByName(List<Class> classes,File file) throws ClassNotFoundException {
+
+        if(file.isDirectory()){
+            for(File f:file.listFiles()){
+                inflateClassByName(classes,f);
+            }
+        }
+        if(file.isFile()&&file.getName().endsWith(".class"))
+            classes.add(Class.forName(getClassName(file)));
+    }
+
+    /**
+     * 获得当前class文件的类全名
+     * @param file
+     * @return
+     */
+    private static String getClassName(File file){
+        String absolutePath = file.getAbsolutePath();
+
+        System.out.println("之前 "+absolutePath);
+
+        absolutePath=absolutePath.replace(getClassPath(),"");
+
+        System.out.println("之后  "+absolutePath);
+
+        System.out.println(absolutePath);
+        absolutePath=absolutePath.replace("\\",".");
+
+        absolutePath=absolutePath.replace("/",".");
+        String substring = absolutePath.substring(0, absolutePath.lastIndexOf("."));
+        System.out.println(substring);
+        return substring;
+    }
+
+
+    /**
+     * 获得编译后的Class文件的绝对路径
+     * @return
+     */
+    private static String getClassPath(){
+        String path = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        path=path.substring(1);
+        path=path.replace("/","\\");
+
+        System.out.println(path+"  class路径");
+
+        return path;
+    }
+
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+
+        ArrayList<Class> classes = new ArrayList<>();
+        //inflateClass(classes,new File(getClassPath()));
+        //getInterfaceGeneric(TeacherMapper.class);
+
+        System.out.println(classes.size());
+
     }
 }

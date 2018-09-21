@@ -19,6 +19,9 @@ public class AspectUtil {
     public Object getEnhanceAfterObj(Class c) throws IllegalAccessException, InstantiationException {
         //如果有接口，使用jdk动态代理
 
+        if(!needEnhance(c.getName()))
+            return null;
+
         if (instanceMap.get(c.getName()) == null) {
             instanceMap.put(c.getName(), c.newInstance());
         }

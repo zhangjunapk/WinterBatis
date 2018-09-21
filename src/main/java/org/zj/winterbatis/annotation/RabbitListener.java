@@ -8,5 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface RabbitListener {
-    String queue()default "";
+    String[] queue()default "";
+    String exchangeName()default "";
+    String routeKey()default "";
 }
