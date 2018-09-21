@@ -7,8 +7,12 @@ import net.sf.cglib.proxy.Enhancer;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.quartz.SchedulerException;
 import org.zj.winterbatis.annotation.*;
 import org.zj.winterbatis.annotation.BaseMapper;
+import org.zj.winterbatis.classhandler.ControllerClassHandler;
+import org.zj.winterbatis.classhandler.MapperClassHandler;
+import org.zj.winterbatis.classhandler.ServiceClassHandler;
 import org.zj.winterbatis.util.RabbitMQUtil;
 import org.zj.winterbatis.util.ValUtil;
 
@@ -22,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
+import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -671,124 +676,28 @@ public class DispatchServlet extends HttpServlet {
     }
 
     private void instanceController() throws Exception {
-
+        ControllerClassHandler controllerClassHandler=new ControllerClassHandler(instanceMap,aspectBeanMap);
         for (Class c : classes) {
-            if (c.isAnnotationPresent(Controller.class) || c.isAnnotationPresent(RestController.class)) {
-                //这里还要进行切面判断，看是否要生成代理类对方法进行增强
-                if (needEnhance(c.getName())) {
-                    //你懂得
-                    //把增强后的代理类放进去
-                    instanceMap.put(c.getName(), getEnhanceAfterObj(c));
-                    System.out.println("生成需要增强的代理类:" + c.getName());
-                    continue;
-                }
-                System.out.println("直接newinstance:" + c.getName());
-                instanceMap.put(c.getName(), c.newInstance());
-            }
+            controllerClassHandler.handleClass(c);
         }
     }
-
-    private Object getEnhanceAfterObj(Class c) throws IllegalAccessException, InstantiationException {
-        //如果有接口，使用jdk动态代理
-
-        if (instanceMap.get(c.getName()) == null) {
-            instanceMap.put(c.getName(), c.newInstance());
-        }
-
-        //因为类全名包含key,应该是模糊匹配，而不是全匹配
-        AspectBean aspectBean = getAspectBean(c.getName());
-      /*  if (c.getInterfaces() != null && c.getInterfaces().length != 0) {
-            //使用jdk的动态代理
-
-
-            JdkInvocationHandler jdkMethodInvocation = new JdkInvocationHandler(instanceMap.get(c.getName()), aspectBean);
-            Object o = Proxy.newProxyInstance(jdkMethodInvocation.getClass().getClassLoader(), c.getInterfaces(), jdkMethodInvocation);
-
-            System.out.println("        ---使用jdk增强方法" + c.getName());
-
-            return o;
-        }*/
-        //如果没有接口使用cglib进行增强
-
-
-        Enhancer enhancer = new Enhancer();
-        enhancer.setCallbacks(new Callback[]{new CglibInvocationHandler(aspectBean.getBefore(), aspectBean.getAfter(), instanceMap.get(c.getName()))});
-        enhancer.setSuperclass(c);
-        System.out.println("          ......>>>使用cglib 增强方法    " + c.getName());
-        return enhancer.create();
-    }
-
-    private AspectBean getAspectBean(String name) {
-        for (Map.Entry<String, AspectBean> entry : aspectBeanMap.entrySet()) {
-            if (name.contains(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
-        return null;
-    }
-
-    private boolean needEnhance(String className) {
-        for (String k : aspectBeanMap.keySet()) {
-            if (className.contains(k)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     private void instanceService() throws Exception {
+        ServiceClassHandler serviceClassHandler=new ServiceClassHandler(instanceMap,aspectBeanMap);
         for (Class c : classes) {
-            if (c.isAnnotationPresent(Service.class)) {
-                Object o = c.newInstance();
-                if (needEnhance(c.getName())) {
-                    o = getEnhanceAfterObj(c);
-                    System.out.println("  需要增强:  " + c.getName());
-                }
-                //这里还要进行page处理
-                //生成处理page之后的代理类
-                //Object oo=getPageProxyObject(o);
-                instanceMap.put(c.getName(), o);
-                //还要遍历这个service的所有接口,用于后面注入
-                for (Class interfaceClass : c.getInterfaces()) {
-                    instanceMap.put(interfaceClass.getName(), o);
-                    System.out.println("      接口放进去:" + interfaceClass.getName());
-                }
-            }
+            serviceClassHandler.handleClass(c);
         }
     }
 
-    private void instanceMapper() {
+    private void instanceMapper() throws ParseException, InstantiationException, IllegalAccessException, SchedulerException, IOException {
+
+        MapperClassHandler mapperClassHandler = new MapperClassHandler(druidDataSource, instanceMap);
+
         for (Class c : classes) {
-
-            // TODO: 2018/9/7 有问题
-            if (c.isAnnotationPresent(BaseMapper.class) && c.isInterface()) {
-                //通过mapperInvocationHandler生成代理类
-                //传进去数据源和类
-                InvocationHandler mapperInvocationHandler = new BaseMapperInvocationHandler(c, druidDataSource);
-                //这里生成的代理类总是空的
-                Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
-                System.out.println("           >>>>>>>>" + c.getName());
-                instanceMap.put(c.getName(), o);
-                System.out.println("生成代理类:" + c.getName());
-            }
-
-
-            if (c.isAnnotationPresent(Mapper.class) && c.isInterface()) {
-                //通过mapperInvocationHandler生成代理类
-                //传进去数据源和类
-                MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler(druidDataSource, c);
-                //这里生成的代理类总是空的
-                Object o = Proxy.newProxyInstance(c.getClassLoader(), new Class[]{c}, mapperInvocationHandler);
-
-
-                System.out.println("           >>>>>>>>" + c.getName());
-                instanceMap.put(c.getName(), o);
-                System.out.println("生成代理类:" + c.getName());
-
-            }
+            mapperClassHandler.handleClass(c);
         }
     }
+
 
 
     private void initAnnotation() {
