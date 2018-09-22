@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
 
+/**
+ * service类处理器，用于生成类的实例和增强
+ */
 public class ServiceClassHandler extends AbsClassHandler {
 
     private Map<String, AspectBean> aspectBeanMap;

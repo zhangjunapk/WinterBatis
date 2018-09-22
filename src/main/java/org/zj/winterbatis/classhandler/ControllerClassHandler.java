@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
 
+/**
+ * Controller 类处理器，用于对类进行实例化以及增强
+ */
 public class ControllerClassHandler extends AbsClassHandler {
     private Map<String, AspectBean> aspectBeanMap;
     private Map<String,Object> instanceMap;

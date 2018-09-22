@@ -258,24 +258,26 @@ public class ClassUtil {
      * @throws Exception
      */
     public static Class getCompile(String className,File from, File to) throws Exception {
+
+        if(!to.exists())
+            to.mkdirs();
+
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        // 建立DiagnosticCollector对象
 
         DiagnosticCollector diagnostics = new DiagnosticCollector();
 
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
 
-        // 建立源文件对象，每个文件被保存在一个从JavaFileObject继承的类中
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromStrings(Arrays
                 .asList(from.getAbsolutePath()));
 
-        // options命令行选项
+
         Iterable<String> options = Arrays.asList("-d",
                 to.getAbsolutePath());// 指定的路径一定要存在，javac不会自己创建文件夹
         JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnostics, options, null,
                 compilationUnits);
 
-        // 编译源程序
+        //编译java文件
         boolean success = task.call();
         fileManager.close();
         System.out.println((success) ? "编译成功" : "编译失败");

@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 /**
  * @BelongsProject: WinterBatis
  * @BelongsPackage: org.zj.winterbatis.util
- * @Author: Java
+ * @Author: ZhangJun
  * @CreateTime: 2018-09-22 14:42
  * @Description: ${Description}
  */

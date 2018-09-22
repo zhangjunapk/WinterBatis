@@ -15,6 +15,6 @@ import org.zj.winterbatis.annotation.*;
 @DataSource(username = "root",password = "",url="jdbc:mysql://localhost:3306/bilibili",driver = "com.mysql.jdbc.Driver")
 public class Config {
     public static void main(String[] args) {
-        //在这里启动web服务器并且初始化框架
+        //后面会像springboot一样通过一个Application来开启web服务器并初始化框架
     }
 }

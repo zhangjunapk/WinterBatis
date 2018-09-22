@@ -13,6 +13,9 @@ import java.lang.reflect.Proxy;
 import java.text.ParseException;
 import java.util.Map;
 
+/**
+ * mapper处理器，用于生成代理类
+ */
 public class MapperClassHandler extends AbsClassHandler {
 
     private DruidDataSource druidDataSource;

@@ -3,7 +3,7 @@ package org.zj.winterbatis.core;
 /**
  * @BelongsProject: WinterBatis
  * @BelongsPackage: org.zj.winterbatis.core
- * @Author: Java
+ * @Author: ZhangJun
  * @CreateTime: 2018-09-22 21:04
  * @Description: ${Description}
  */

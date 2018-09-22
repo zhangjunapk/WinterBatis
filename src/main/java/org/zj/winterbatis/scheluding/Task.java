@@ -6,7 +6,7 @@ import org.zj.winterbatis.annotation.Scheduling;
 /**
  * @BelongsProject: WinterBatis
  * @BelongsPackage: org.zj.winterbatis.scheluding
- * @Author: Java
+ * @Author: ZhangJun
  * @CreateTime: 2018-09-21 21:58
  * @Description: ${Description}
  */

@@ -5,6 +5,9 @@ import org.zj.winterbatis.util.TaskUtil;
 
 import java.lang.reflect.Method;
 
+/**
+ * 定时任务类处理器，用于开启定时任务
+ */
 public class TaskClassHandler extends AbsClassHandler {
 
     @Override

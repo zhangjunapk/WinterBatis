@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * 消息消费者的类处理器，用于开启消费者的监听
+ */
 public class RabbitMQCustomerClassHandler extends AbsClassHandler {
 
     private ConnectionFactory factory;
