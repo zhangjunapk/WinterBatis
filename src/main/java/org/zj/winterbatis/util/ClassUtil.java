@@ -181,7 +181,7 @@ public class ClassUtil {
     private static String getClassName(File file){
         String absolutePath = file.getAbsolutePath();
 
-        System.out.println("之前 "+absolutePath);
+        //System.out.println("之前 "+absolutePath);
 
         absolutePath=absolutePath.replace(getClassPath(),"");
 
@@ -201,12 +201,12 @@ public class ClassUtil {
      * 获得编译后的Class文件的绝对路径
      * @return
      */
-    private static String getClassPath(){
+    public static String getClassPath(){
         String path = Thread.currentThread().getContextClassLoader().getResource("").getPath();
         path=path.substring(1);
         path=path.replace("/","\\");
 
-        System.out.println(path+"  class路径");
+        //System.out.println(path+"  class路径");
 
         return path;
     }

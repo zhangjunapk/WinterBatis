@@ -2,15 +2,14 @@ package org.zj.winterbatis.core;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.tools.doclets.internal.toolkit.NestedClassWriter;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.quartz.SchedulerException;
 import org.zj.winterbatis.Config;
 import org.zj.winterbatis.annotation.*;
-import org.zj.winterbatis.classhandler.ControllerClassHandler;
-import org.zj.winterbatis.classhandler.MapperClassHandler;
-import org.zj.winterbatis.classhandler.ServiceClassHandler;
+import org.zj.winterbatis.classhandler.*;
 import org.zj.winterbatis.util.ClassUtil;
 import org.zj.winterbatis.util.RabbitMQUtil;
 import org.zj.winterbatis.util.ValUtil;
@@ -27,6 +26,7 @@ import java.io.IOException;
 import java.lang.reflect.*;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,11 +43,6 @@ public class DispatchServlet extends HttpServlet {
     String viewSuffix;
 
     List<Class> classes = new ArrayList<>();
-
-    List<String> basePackage = new ArrayList<>();
-    List<String> aspectPackage = new ArrayList<>();
-    List<String> mapperPackage = new ArrayList<>();
-
     DruidDataSource druidDataSource = new DruidDataSource();
 
     Map<String, Object> instanceMap = new HashMap<>();
@@ -535,14 +530,14 @@ public class DispatchServlet extends HttpServlet {
 
     private void doDI() throws IllegalAccessException {
 
-        System.out.println("----------------");
+        //System.out.println("----------------");
         for (String s : instanceMap.keySet()) {
             System.out.println(s);
         }
-        System.out.println("-----------------");
+        //System.out.println("-----------------");
         for (Class c : classes) {
 
-            System.out.println("       当前是" + c.getName());
+            //System.out.println("       当前是" + c.getName());
 
             for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Autofired.class)) {
@@ -552,19 +547,19 @@ public class DispatchServlet extends HttpServlet {
                         //获得这个上面的注解
                         RabbitProducter rabbitProducter=field.getAnnotation(RabbitProducter.class);
 
-                        System.out.println("------------------找到了 ，生产者 然后给你注入进去");
+                        //System.out.println("------------------找到了 ，生产者 然后给你注入进去");
 
                         field.set(instanceMap.get(c.getName()), RabbitMQUtil.getProxyObject(rabbit,RabbitMQProducter.class,rabbitProducter));
                     }
 
                     try {
-                        System.out.println("       为" + c.getName() + "注入" + field.getName());
+                        //System.out.println("       为" + c.getName() + "注入" + field.getName());
 
 
-                        System.out.println("-------");
+                       // System.out.println("-------");
                         System.out.println(instanceMap.get(c.getName()) != null);
                         System.out.println(instanceMap.get(field.getType().getName()) != null);
-                        System.out.println("----------");
+                        //System.out.println("----------");
 
                         if (instanceMap.get(field.getType().getName()) == null)
                             continue;
@@ -630,7 +625,7 @@ public class DispatchServlet extends HttpServlet {
                         requestMethod = "DELETE";
                     }
 
-                    System.out.println("----------放进去:   "+prefixMapping+methodMappingStr);
+                    //System.out.println("----------放进去:   "+prefixMapping+methodMappingStr);
 
                     requestMappingMap.put(prefixMapping + methodMappingStr, new Invoke(instanceMap.get(c.getName()), m, requestMethod));
 
@@ -644,6 +639,29 @@ public class DispatchServlet extends HttpServlet {
         instanceMapper();
         instanceService();
         instanceController();
+        instanceTask();
+        instanceCustomer();
+    }
+    //rabbitmq消费者的监听处理
+    private void instanceCustomer() throws IOException, TimeoutException, InstantiationException, IllegalAccessException {
+        for (Class c : classes) {
+            if(!c.isAnnotationPresent(Component.class))
+                continue;
+            for(Method m:c.getDeclaredMethods()) {
+                if(!m.isAnnotationPresent(RabbitListener.class))
+                    continue;
+                RabbitListener annotation = m.getAnnotation(RabbitListener.class);
+                RabbitMQCustomerClassHandler rabbitMQCustomerClassHandler=new RabbitMQCustomerClassHandler(annotation);
+                rabbitMQCustomerClassHandler.handleClass(c);
+            }
+        }
+    }
+
+    private void instanceTask() throws Exception {
+        TaskClassHandler taskClassHandler=new TaskClassHandler();
+        for (Class c : classes) {
+            taskClassHandler.handleClass(c);
+        }
     }
 
     private void instanceController() throws Exception {
@@ -675,13 +693,7 @@ public class DispatchServlet extends HttpServlet {
 
         rabbit= (Rabbit) config.getAnnotation(Rabbit.class);
 
-        BasePackage basePackage = (BasePackage) config.getAnnotation(BasePackage.class);
-
-        System.out.println(basePackage.value());
-
         MapperScan mapperScan = (MapperScan) config.getAnnotation(MapperScan.class);
-        AspectScan aspectScan = (AspectScan) config.getAnnotation(AspectScan.class);
-
         WebPath webPath = (WebPath) config.getAnnotation(WebPath.class);
         this.webName = webPath.value();
 
@@ -691,15 +703,6 @@ public class DispatchServlet extends HttpServlet {
         this.viewSuffix = viewSuffix.value();
         this.viewPrefix = viewPrefix.value();
 
-        for (String s : basePackage.value()) {
-            this.basePackage.add(s);
-        }
-        for (String s : mapperScan.value()) {
-            this.mapperPackage.add(s);
-        }
-        for (String s : aspectScan.value()) {
-            this.aspectPackage.add(s);
-        }
 
         DataSource dataSource = (DataSource) config.getAnnotation(DataSource.class);
 

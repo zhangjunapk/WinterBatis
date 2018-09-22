@@ -36,14 +36,14 @@ public class RabbitMQProducterInvocationHandler implements InvocationHandler {
     public RabbitMQProducterInvocationHandler(Rabbit rabbit, RabbitProducter rabbitProducter){
         this.rabbit=rabbit;
         this.rabbitProducter=rabbitProducter;
-        this.host=host;
-        this.port=port;
-        this.username=username;
-        this.password=password;
+        this.host=rabbit.host();
+        this.port=rabbit.port();
+        this.username=rabbit.username();
+        this.password=rabbit.password();
 
-        this.routeKey=routeKey;
-        this.queueName=queueName;
-        this.exchangeName=exchangeName;
+        this.routeKey=rabbitProducter.routeKey();
+        this.queueName=rabbitProducter.queueName();
+        this.exchangeName=rabbitProducter.exchangeName();
     }
 
     @Override
@@ -54,10 +54,12 @@ public class RabbitMQProducterInvocationHandler implements InvocationHandler {
 
         //直接发送String
         if(method.getName().equals("sendStringMessage")){
+            System.out.println("我发送了字符串的消息");
             channel.basicPublish(exchangeName,routeKey,false,bp, ValUtil.parseString(args[0]).getBytes());
         }
         //转换成json后再发送
         if(method.getName().equals("sendObjectMessage")){
+            System.out.println("我发送了对象的消息");
             channel.basicPublish(exchangeName,routeKey,false,bp, new ObjectMapper().writeValueAsString(args[0]).getBytes());
         }
 

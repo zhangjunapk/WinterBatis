@@ -1,6 +1,7 @@
 package org.zj.winterbatis.controller;
 
 import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.bean.Student;
 import org.zj.winterbatis.core.RabbitMQProducter;
 
 @Controller
@@ -14,6 +15,7 @@ public class MQController {
     @RequestMapping("/tt")
     @ResponceBody
     public void test(){
-        rabbitMQProducter.sendStringMessage("我是消息 被发送了");
+        rabbitMQProducter.sendStringMessage("send string");
+        rabbitMQProducter.sendObjectMessage(new Student("zhangjun","555"));
     }
 }

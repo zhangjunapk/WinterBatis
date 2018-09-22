@@ -1,22 +1,19 @@
 package org.zj.winterbatis.classhandler;
 
-import org.quartz.SchedulerException;
 import org.zj.winterbatis.annotation.Scheduling;
 import org.zj.winterbatis.util.TaskUtil;
 
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.text.ParseException;
 
 public class TaskClassHandler extends AbsClassHandler {
 
     @Override
-    public void handleClass(Class c) throws IOException, SchedulerException, IllegalAccessException, InstantiationException, ParseException {
+    public void handleClass(Class c) throws Exception {
         for(Method m:c.getDeclaredMethods()){
             if(!m.isAnnotationPresent(Scheduling.class))
                 continue;
 
-            Scheduling scheduling= (Scheduling) c.getAnnotation(Scheduling.class);
+            Scheduling scheduling= m.getAnnotation(Scheduling.class);
             String cron=scheduling.cron();
 
             //开始创建任务

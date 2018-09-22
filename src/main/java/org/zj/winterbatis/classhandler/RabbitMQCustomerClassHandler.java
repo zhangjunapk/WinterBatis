@@ -1,11 +1,16 @@
 package org.zj.winterbatis.classhandler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.rabbitmq.client.*;
 import org.zj.winterbatis.annotation.Component;
 import org.zj.winterbatis.annotation.RabbitListener;
+import org.zj.winterbatis.util.ClassUtil;
+import org.zj.winterbatis.util.MethodUtil;
 import org.zj.winterbatis.util.ValUtil;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeoutException;
 
 public class RabbitMQCustomerClassHandler extends AbsClassHandler {
@@ -14,6 +19,8 @@ public class RabbitMQCustomerClassHandler extends AbsClassHandler {
     private Connection connection;
     private Channel channel;
     private Consumer consumer;
+
+    private Object instance;
 
     private String[] queue;
     public RabbitMQCustomerClassHandler(RabbitListener rabbitListener) throws IOException, TimeoutException {
@@ -36,7 +43,12 @@ public class RabbitMQCustomerClassHandler extends AbsClassHandler {
     }
 
     @Override
-    public void handleClass(Class c) throws IOException {
+    public void handleClass(Class c) throws IOException, IllegalAccessException, InstantiationException {
+
+        if(instance==null){
+            instance=c.newInstance();
+        }
+
         if(!c.isAnnotationPresent(Component.class))
             return;
         for(java.lang.reflect.Method m:c.getDeclaredMethods()){
@@ -49,11 +61,42 @@ public class RabbitMQCustomerClassHandler extends AbsClassHandler {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
                                            byte[] body) throws IOException {
+
+                    try {
+                        Class generic = MethodUtil.getParamType(0,m);
+                        if(!(generic==String.class)){
+                            //调用json来讲对象进行转换，然后执行m方法
+
+                            try {
+                                Object o = new ObjectMapper().readValue(new String(body, "UTF-8"), generic);
+                                m.invoke(instance, o);
+
+                                System.out.println("我收到了对象的消息");
+                                return;
+                            }catch (Exception e){
+
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     String message = new String(body, "UTF-8");
 
-                    System.out.println("你知道吗 我收到消息了");
+                    System.out.println("你知道吗 我收到字符串消息了");
 
                     System.out.println(" [x] Received '" + message + "'");
+
+                    try {
+                        m.invoke(instance,message);
+
+
+
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
                 }
             };
             for(String q:queue){
@@ -76,4 +119,7 @@ public class RabbitMQCustomerClassHandler extends AbsClassHandler {
     private String getPassword(){
         return getProperties().getProperty("rabbit.password");
     }
+
+
+
 }
