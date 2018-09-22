@@ -21,7 +21,7 @@ public class BaseClassLoader extends ClassLoader{
      * @return
      * @throws IOException
      */
-    public Class getClass(String className,File file) throws IOException, ClassNotFoundException {
+    public Class getClass(String className, File file) throws IOException, ClassNotFoundException {
         if(file.isDirectory())
             return null;
         byte[] bytes=getByte(file);
@@ -35,7 +35,7 @@ public class BaseClassLoader extends ClassLoader{
         return c;
     }
 
-    private byte[] getByte(File file) throws IOException {
+    private static byte[] getByte(File file) throws IOException {
         FileInputStream fis=new FileInputStream(file);
         FileChannel channel = fis.getChannel();
         ByteArrayOutputStream baos=new ByteArrayOutputStream();

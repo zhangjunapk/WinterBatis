@@ -11,10 +11,10 @@ import java.util.Properties;
 
 public abstract class AbsClassHandler {
     private static Properties properties=new Properties();
-   public abstract void handleClass(Class c) throws IOException, SchedulerException, IllegalAccessException, InstantiationException, ParseException, InvocationTargetException, ClassNotFoundException, Exception;
+   public abstract void handleClass(Class c) throws Exception;
     static{
         try {
-            //缺陷，配置文件是绝对路径
+
             properties.load(new FileInputStream(ClassUtil.getClassPath()+"\\application.properties"));
         } catch (Exception e) {
             e.printStackTrace();

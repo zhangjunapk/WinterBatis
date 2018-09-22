@@ -530,10 +530,6 @@ public class DispatchServlet extends HttpServlet {
 
     private void doDI() throws IllegalAccessException {
 
-        //System.out.println("----------------");
-        for (String s : instanceMap.keySet()) {
-            System.out.println(s);
-        }
         //System.out.println("-----------------");
         for (Class c : classes) {
 
@@ -553,24 +549,14 @@ public class DispatchServlet extends HttpServlet {
                     }
 
                     try {
-                        //System.out.println("       为" + c.getName() + "注入" + field.getName());
-
-
-                       // System.out.println("-------");
-                        System.out.println(instanceMap.get(c.getName()) != null);
-                        System.out.println(instanceMap.get(field.getType().getName()) != null);
-                        //System.out.println("----------");
 
                         if (instanceMap.get(field.getType().getName()) == null)
                             continue;
-
+                        //直接从实例map中得到，然后注入进去
                         field.set(instanceMap.get(c.getName()), instanceMap.get(field.getType().getName()));
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                     }
-
-
-
                 }
 
             }
