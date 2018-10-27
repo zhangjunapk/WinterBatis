@@ -1,6 +1,6 @@
 package org.zj.winterbatis.controller;
 
-import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.core.annotation.*;
 import org.zj.winterbatis.bean.Teacher;
 import org.zj.winterbatis.dao.TeacherMapper;
 

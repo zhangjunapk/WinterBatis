@@ -1,8 +1,8 @@
 package org.zj.winterbatis.mq;
 
 
-import org.zj.winterbatis.annotation.Component;
-import org.zj.winterbatis.annotation.RabbitListener;
+import org.zj.winterbatis.core.annotation.Component;
+import org.zj.winterbatis.core.annotation.RabbitListener;
 import org.zj.winterbatis.bean.Student;
 
 @Component

@@ -1,7 +1,6 @@
 package org.zj.winterbatis;
 
-import org.zj.winterbatis.annotation.Delete;
-import org.zj.winterbatis.bean.Teacher;
+import org.zj.winterbatis.core.annotation.Delete;
 
 import java.util.List;
 

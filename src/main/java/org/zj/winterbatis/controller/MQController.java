@@ -1,8 +1,8 @@
 package org.zj.winterbatis.controller;
 
-import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.core.annotation.*;
 import org.zj.winterbatis.bean.Student;
-import org.zj.winterbatis.core.RabbitMQProducter;
+import org.zj.winterbatis.core.mq.RabbitMQProducter;
 
 @Controller
 @RequestMapping("/mq")

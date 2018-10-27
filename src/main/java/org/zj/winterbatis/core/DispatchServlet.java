@@ -2,17 +2,21 @@ package org.zj.winterbatis.core;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.tools.doclets.internal.toolkit.NestedClassWriter;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.quartz.SchedulerException;
 import org.zj.winterbatis.Config;
-import org.zj.winterbatis.annotation.*;
-import org.zj.winterbatis.classhandler.*;
-import org.zj.winterbatis.util.ClassUtil;
-import org.zj.winterbatis.util.RabbitMQUtil;
-import org.zj.winterbatis.util.ValUtil;
+import org.zj.winterbatis.core.annotation.*;
+import org.zj.winterbatis.core.classhandler.*;
+import org.zj.winterbatis.core.bean.AspectBean;
+import org.zj.winterbatis.core.bean.Invoke;
+import org.zj.winterbatis.core.mq.RabbitMQProducter;
+import org.zj.winterbatis.core.template.AbsTemplateIniter;
+import org.zj.winterbatis.core.template.RedisTemplateHandler;
+import org.zj.winterbatis.core.util.ClassUtil;
+import org.zj.winterbatis.core.util.RabbitMQUtil;
+import org.zj.winterbatis.core.util.ValUtil;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -21,7 +25,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.*;
 import java.text.ParseException;
@@ -486,7 +489,9 @@ public class DispatchServlet extends HttpServlet {
 
         //对对象进行注入
         try {
+            doDiTemplate();
             doDI();
+
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -545,7 +550,7 @@ public class DispatchServlet extends HttpServlet {
 
                         //System.out.println("------------------找到了 ，生产者 然后给你注入进去");
 
-                        field.set(instanceMap.get(c.getName()), RabbitMQUtil.getProxyObject(rabbit,RabbitMQProducter.class,rabbitProducter));
+                        field.set(instanceMap.get(c.getName()), RabbitMQUtil.getProxyObject(rabbit, RabbitMQProducter.class,rabbitProducter));
                     }
 
                     try {
@@ -628,6 +633,20 @@ public class DispatchServlet extends HttpServlet {
         instanceTask();
         instanceCustomer();
     }
+
+    /**
+     * 初始化模板，你懂得
+     */
+    private void doDiTemplate() {
+        //这里要遍历所有类，然后遍历所有字段
+        for(Class c:classes){
+            for(Field f:c.getDeclaredFields()){
+                AbsTemplateIniter templateIniter=new RedisTemplateHandler(f,instanceMap.get(c.getName()),Config.class.getAnnotation(RedisConfiguration.class));
+                templateIniter.handle();
+            }
+        }
+    }
+
     //rabbitmq消费者的监听处理
     private void instanceCustomer() throws IOException, TimeoutException, InstantiationException, IllegalAccessException {
         for (Class c : classes) {
@@ -637,40 +656,34 @@ public class DispatchServlet extends HttpServlet {
                 if(!m.isAnnotationPresent(RabbitListener.class))
                     continue;
                 RabbitListener annotation = m.getAnnotation(RabbitListener.class);
-                RabbitMQCustomerClassHandler rabbitMQCustomerClassHandler=new RabbitMQCustomerClassHandler(annotation);
-                rabbitMQCustomerClassHandler.handleClass(c);
+                RabbitMQCustomerClassHandler rabbitMQCustomerClassHandler=new RabbitMQCustomerClassHandler();
+                rabbitMQCustomerClassHandler.handleClass(classes);
             }
         }
     }
 
     private void instanceTask() throws Exception {
         TaskClassHandler taskClassHandler=new TaskClassHandler();
-        for (Class c : classes) {
-            taskClassHandler.handleClass(c);
-        }
+            taskClassHandler.handleClass(classes);
     }
 
     private void instanceController() throws Exception {
         ControllerClassHandler controllerClassHandler=new ControllerClassHandler(instanceMap,aspectBeanMap);
-        for (Class c : classes) {
-            controllerClassHandler.handleClass(c);
-        }
+            controllerClassHandler.handleClass(classes);
     }
 
     private void instanceService() throws Exception {
         ServiceClassHandler serviceClassHandler=new ServiceClassHandler(instanceMap,aspectBeanMap);
-        for (Class c : classes) {
-            serviceClassHandler.handleClass(c);
-        }
+            serviceClassHandler.handleClass(classes);
+
     }
 
     private void instanceMapper() throws ParseException, InstantiationException, IllegalAccessException, SchedulerException, IOException {
 
         MapperClassHandler mapperClassHandler = new MapperClassHandler(druidDataSource, instanceMap);
 
-        for (Class c : classes) {
-            mapperClassHandler.handleClass(c);
-        }
+        mapperClassHandler.handleClass(classes);
+
     }
 
 

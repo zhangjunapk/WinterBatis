@@ -4,15 +4,9 @@ package org.zj.winterbatis;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.zj.winterbatis.annotation.BaseMapper;
-import org.zj.winterbatis.annotation.Delete;
-import org.zj.winterbatis.annotation.Mapper;
 import org.zj.winterbatis.scheluding.GhostContext;
-import org.zj.winterbatis.util.AnnotationUtil;
-import org.zj.winterbatis.util.ClassUtil;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
 /**
  * Created by ZhangJun on 2018/7/7.

@@ -1,9 +1,8 @@
 package org.zj.winterbatis.service.impl;
 
-import com.github.pagehelper.PageInfo;
-import org.zj.winterbatis.annotation.Autofired;
-import org.zj.winterbatis.annotation.Page;
-import org.zj.winterbatis.annotation.Service;
+import org.zj.winterbatis.core.annotation.Autofired;
+import org.zj.winterbatis.core.annotation.Page;
+import org.zj.winterbatis.core.annotation.Service;
 import org.zj.winterbatis.bean.Student;
 import org.zj.winterbatis.dao.StudentMapper;
 import org.zj.winterbatis.service.IStudentService;

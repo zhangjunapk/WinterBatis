@@ -1,6 +1,6 @@
 package org.zj.winterbatis.controller;
 
-import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.core.annotation.*;
 
 /**
  * Created by ZhangJun on 2018/9/1.

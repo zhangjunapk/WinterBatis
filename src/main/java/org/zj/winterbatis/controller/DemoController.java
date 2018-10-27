@@ -1,9 +1,9 @@
 package org.zj.winterbatis.controller;
 
-import org.zj.winterbatis.annotation.Controller;
-import org.zj.winterbatis.annotation.RequestMapping;
-import org.zj.winterbatis.annotation.RequestParam;
-import org.zj.winterbatis.annotation.ResponceBody;
+import org.zj.winterbatis.core.annotation.Controller;
+import org.zj.winterbatis.core.annotation.RequestMapping;
+import org.zj.winterbatis.core.annotation.RequestParam;
+import org.zj.winterbatis.core.annotation.ResponceBody;
 
 import java.util.Arrays;
 

@@ -1,7 +1,7 @@
 package org.zj.winterbatis.scheluding;
 
-import org.zj.winterbatis.annotation.Component;
-import org.zj.winterbatis.annotation.Scheduling;
+import org.zj.winterbatis.core.annotation.Component;
+import org.zj.winterbatis.core.annotation.Scheduling;
 
 /**
  * @BelongsProject: WinterBatis

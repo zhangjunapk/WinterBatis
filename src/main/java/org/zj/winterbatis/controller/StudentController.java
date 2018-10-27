@@ -1,12 +1,9 @@
 package org.zj.winterbatis.controller;
 
-import com.github.pagehelper.PageInfo;
-import org.zj.winterbatis.IStudent;
-import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.core.annotation.*;
 import org.zj.winterbatis.bean.Student;
 import org.zj.winterbatis.dao.StudentMapper;
 import org.zj.winterbatis.service.IStudentService;
-import org.zj.winterbatis.service.impl.StudentServiceImpl;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

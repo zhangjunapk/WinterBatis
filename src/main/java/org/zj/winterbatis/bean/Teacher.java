@@ -1,6 +1,6 @@
 package org.zj.winterbatis.bean;
 
-import org.zj.winterbatis.annotation.Id;
+import org.zj.winterbatis.core.annotation.Id;
 
 /**
  * Created by ZhangJun on 2018/9/7.

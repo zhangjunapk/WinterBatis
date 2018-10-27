@@ -1,9 +1,9 @@
 package org.zj.winterbatis.aspect;
 
-import org.zj.winterbatis.annotation.After;
-import org.zj.winterbatis.annotation.Aspect;
-import org.zj.winterbatis.annotation.Before;
-import org.zj.winterbatis.annotation.Condition;
+import org.zj.winterbatis.core.annotation.After;
+import org.zj.winterbatis.core.annotation.Aspect;
+import org.zj.winterbatis.core.annotation.Before;
+import org.zj.winterbatis.core.annotation.Condition;
 /**
  * Created by ZhangJun on 2018/7/7.
  */

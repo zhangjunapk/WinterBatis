@@ -1,6 +1,6 @@
 package org.zj.winterbatis.dao;
 
-import org.zj.winterbatis.annotation.*;
+import org.zj.winterbatis.core.annotation.*;
 import org.zj.winterbatis.bean.Student;
 
 import java.util.List;
